@@ -7,13 +7,13 @@ import { companies } from "@/lib/mock-data";
 export const Route = createFileRoute("/company-wise-kit")({
   head: () => ({
     meta: [
-      { title: "Company Wise Interview Kit — Codolio" },
+      { title: "Company Wise Interview Kit — Lendi" },
       {
         name: "description",
         content:
           "Most asked coding interview questions grouped by company, with role and difficulty filters for focused preparation.",
       },
-      { property: "og:title", content: "Company Wise Interview Kit — Codolio" },
+      { property: "og:title", content: "Company Wise Interview Kit — Lendi" },
       {
         property: "og:description",
         content: "Prepare company-wise with the most frequently asked DSA questions per company.",
@@ -51,7 +51,6 @@ function CompanyWiseKitPage() {
         </p>
       </div>
 
-
       <div className="card-surface flex flex-wrap items-center gap-3 p-4">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -83,7 +82,10 @@ function CompanyWiseKitPage() {
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {list.map((c) => (
-          <article key={c.name} className="card-surface p-5 transition-colors hover:border-primary/50">
+          <article
+            key={c.name}
+            className="card-surface p-5 transition-colors hover:border-primary/50"
+          >
             <div className="flex items-center gap-3">
               <span className="grid size-10 place-items-center rounded-lg bg-primary/15 text-primary">
                 <Building2 className="size-5" />
@@ -95,7 +97,10 @@ function CompanyWiseKitPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {c.roles.map((r) => (
-                <span key={r} className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
+                <span
+                  key={r}
+                  className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground"
+                >
                   {r}
                 </span>
               ))}

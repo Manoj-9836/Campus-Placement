@@ -10,6 +10,7 @@
  */
 import { useSyncExternalStore } from "react";
 import { currentUser, questions, sheets, platformStats, developmentStats } from "./mock-data";
+import { appConfig } from "@/config/app";
 
 export type QuestionStatus = "Solved" | "Attempted" | "Todo";
 
@@ -57,31 +58,34 @@ export type AppState = {
   };
 };
 
-const defaults: AppState = {
-  followed: sheets.slice(0, 3).map((s) => s.id),
-  customSheets: [],
-  questionStatus: Object.fromEntries(questions.map((q) => [q.id, q.status])) as Record<
-    string,
-    QuestionStatus
-  >,
-  userNotes: [],
-  reminders: [],
-  events: [],
-  connected: [...platformStats, ...developmentStats].filter((p) => p.connected).map((p) => p.name),
-  visibility: currentUser.visibility,
-  profile: {
-    name: currentUser.name,
-    handle: currentUser.handle,
-    location: currentUser.location,
-    institution: currentUser.institution,
-    about: currentUser.about,
-    email: "manoj@example.com",
-  },
-};
+function createDefaultState(): AppState {
+  return {
+    followed: sheets.slice(0, 3).map((s) => s.id),
+    customSheets: [],
+    questionStatus: Object.fromEntries(questions.map((q) => [q.id, q.status])) as Record<
+      string,
+      QuestionStatus
+    >,
+    userNotes: [],
+    reminders: [],
+    events: [],
+    connected: [...platformStats, ...developmentStats]
+      .filter((p) => p.connected)
+      .map((p) => p.name),
+    visibility: currentUser.visibility,
+    profile: {
+      name: currentUser.name,
+      handle: currentUser.handle,
+      location: currentUser.location,
+      institution: currentUser.institution,
+      about: currentUser.about,
+      email: "manoj@example.com",
+    },
+  };
+}
 
-const KEY = "codolio.state.v1";
-
-let state: AppState = defaults;
+const defaults = createDefaultState();
+let state: AppState = createDefaultState();
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -90,7 +94,7 @@ function emit() {
 
 function persist() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    localStorage.setItem(appConfig.storageKey, JSON.stringify(state));
   } catch {
     /* storage unavailable — keep state in memory only */
   }
@@ -106,10 +110,17 @@ export function setAppState(patch: Partial<AppState> | ((s: AppState) => Partial
 /** Called once from the client after hydration so SSR markup stays stable. */
 export function hydrateAppState() {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw =
+      localStorage.getItem(appConfig.storageKey) ??
+      appConfig.legacyStorageKeys.map((key) => localStorage.getItem(key)).find(Boolean);
     if (!raw) return;
     const parsed = JSON.parse(raw) as Partial<AppState>;
-    state = { ...defaults, ...parsed, profile: { ...defaults.profile, ...parsed.profile } };
+    state = {
+      ...defaults,
+      ...parsed,
+      profile: { ...defaults.profile, ...(parsed.profile ?? {}) },
+    };
+    persist();
     emit();
   } catch {
     /* ignore corrupt storage */
@@ -117,7 +128,7 @@ export function hydrateAppState() {
 }
 
 export function resetAppState() {
-  state = defaults;
+  state = createDefaultState();
   persist();
   emit();
 }
@@ -155,7 +166,9 @@ export const deleteNote = (id: string) =>
 
 export const toggleReminder = (id: string) =>
   setAppState((s) => ({
-    reminders: s.reminders.includes(id) ? s.reminders.filter((x) => x !== id) : [...s.reminders, id],
+    reminders: s.reminders.includes(id)
+      ? s.reminders.filter((x) => x !== id)
+      : [...s.reminders, id],
   }));
 
 export const addEvent = (event: Omit<CustomEvent, "id">) =>

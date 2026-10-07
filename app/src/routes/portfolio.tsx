@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, CheckCircle2, ExternalLink, MapPin, Plus, RefreshCw, School, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  CheckCircle2,
+  ExternalLink,
+  MapPin,
+  Plus,
+  RefreshCw,
+  School,
+  Trophy,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   awards,
@@ -15,14 +24,17 @@ import {
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
     meta: [
-      { title: "My Coding Portfolio | Codolio" },
+      { title: "My Coding Portfolio | Lendi" },
       {
         name: "description",
         content:
           "A single portfolio that aggregates LeetCode, CodeChef, Codeforces and GitHub stats with topic analysis, streaks and awards.",
       },
-      { property: "og:title", content: "My Coding Portfolio | Codolio" },
-      { property: "og:description", content: "Aggregated coding profile stats, topic analysis, streaks and awards." },
+      { property: "og:title", content: "My Coding Portfolio | Lendi" },
+      {
+        property: "og:description",
+        content: "Aggregated coding profile stats, topic analysis, streaks and awards.",
+      },
       { property: "og:type", content: "profile" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -62,7 +74,10 @@ function PortfolioPage() {
             <h2 className="text-sm font-semibold">Problem Solving Stats</h2>
             <ul className="mt-3 space-y-2">
               {platformStats.map((p) => (
-                <li key={p.name} className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3">
+                <li
+                  key={p.name}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3"
+                >
                   <span className="flex-1 truncate text-sm font-medium">{p.name}</span>
                   {p.connected ? (
                     <CheckCircle2 className="size-4 text-success" />
@@ -83,7 +98,10 @@ function PortfolioPage() {
             <h2 className="mt-5 text-sm font-semibold">Development Stats</h2>
             <ul className="mt-3 space-y-2">
               {developmentStats.map((d) => (
-                <li key={d.name} className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3">
+                <li
+                  key={d.name}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3"
+                >
                   <span className="flex-1 text-sm font-medium">{d.name}</span>
                   <CheckCircle2 className="size-4 text-success" />
                   <ExternalLink className="size-4 text-muted-foreground" />
@@ -159,7 +177,10 @@ function PortfolioPage() {
                     <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${(q.value / totalQuestions) * 100}%`, backgroundColor: q.color }}
+                        style={{
+                          width: `${(q.value / totalQuestions) * 100}%`,
+                          backgroundColor: q.color,
+                        }}
                       />
                     </div>
                   </div>
@@ -198,7 +219,8 @@ function PortfolioPage() {
                     title={`${h.count} submissions`}
                     className="size-3 rounded-[3px]"
                     style={{
-                      backgroundColor: h.count === 0 ? "var(--color-muted)" : "var(--color-primary)",
+                      backgroundColor:
+                        h.count === 0 ? "var(--color-muted)" : "var(--color-primary)",
                       opacity: h.count === 0 ? 1 : Math.min(1, 0.35 + h.count * 0.2),
                     }}
                   />
@@ -232,7 +254,10 @@ function PortfolioPage() {
             <h2 className="text-sm font-semibold">Awards</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {awards.map((a) => (
-                <div key={a.title} className="rounded-lg border border-border bg-surface p-4 text-center">
+                <div
+                  key={a.title}
+                  className="rounded-lg border border-border bg-surface p-4 text-center"
+                >
                   <Trophy className="mx-auto size-6 text-primary" />
                   <p className="mt-2 text-sm font-semibold">{a.title}</p>
                   <p className="text-xs text-muted-foreground">{a.subtitle}</p>

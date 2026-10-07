@@ -1,0 +1,668 @@
+openapi: 3.1.0
+info:
+  title: Campus Placement API
+  version: 1.0.0
+  description: |
+    Backend contract for the student placement and coding preparation platform.
+    All timestamps are ISO 8601 UTC. IDs are opaque strings. Implementations may
+    use any database or framework as long as these request and response contracts
+    remain stable.
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Dashboard
+  - name: Questions
+  - name: Sheets
+  - name: Notes
+  - name: Events
+  - name: Leaderboard
+  - name: Placement Drives
+  - name: Roadmaps
+  - name: Support
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register a student account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201': { description: Account created, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { description: Signed in, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Rotate an access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [refreshToken], properties: { refreshToken: { type: string } } }
+      responses:
+        '200': { description: New tokens, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+
+  /me:
+    get:
+      tags: [Profile]
+      summary: Get the current user's profile
+      responses:
+        '200': { description: Profile, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+    patch:
+      tags: [Profile]
+      summary: Update profile and privacy settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileUpdateRequest' }
+      responses:
+        '200': { description: Updated profile, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+  /me/platform-connections:
+    get:
+      tags: [Profile]
+      summary: List connected coding and development platforms
+      responses:
+        '200': { description: Platform connections, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/PlatformConnection' } } } } } } }
+    post:
+      tags: [Profile]
+      summary: Connect a platform handle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlatformConnectionRequest' }
+      responses:
+        '201': { description: Connection created, content: { application/json: { schema: { $ref: '#/components/schemas/PlatformConnection' } } } }
+  /me/platform-connections/{connectionId}:
+    delete:
+      tags: [Profile]
+      summary: Disconnect a platform
+      parameters: [{ $ref: '#/components/parameters/ConnectionId' }]
+      responses: { '204': { description: Disconnected } }
+  /me/portfolio:
+    get:
+      tags: [Dashboard]
+      summary: Get aggregated profile statistics
+      responses:
+        '200': { description: Portfolio, content: { application/json: { schema: { $ref: '#/components/schemas/Portfolio' } } } }
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get data required by the home dashboard
+      responses:
+        '200': { description: Dashboard data, content: { application/json: { schema: { $ref: '#/components/schemas/Dashboard' } } } }
+
+  /questions:
+    get:
+      tags: [Questions]
+      summary: Search and paginate the question bank
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: companyId, in: query, schema: { type: string } }
+        - { name: difficulty, in: query, schema: { $ref: '#/components/schemas/Difficulty' } }
+      responses: { '200': { description: Questions, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedQuestions' } } } } }
+  /me/questions:
+    get:
+      tags: [Questions]
+      summary: Get the current user's tracked questions
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/QuestionStatus' } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Tracked questions, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedTrackedQuestions' } } } } }
+  /me/questions/{questionId}:
+    patch:
+      tags: [Questions]
+      summary: Update a tracked question status
+      parameters: [{ $ref: '#/components/parameters/QuestionId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [status], properties: { status: { $ref: '#/components/schemas/QuestionStatus' } } }
+      responses: { '200': { description: Updated question, content: { application/json: { schema: { $ref: '#/components/schemas/TrackedQuestion' } } } } }
+
+  /sheets:
+    get:
+      tags: [Sheets]
+      summary: Explore public question sheets
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { name: tag, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Sheets, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedSheets' } } } } }
+  /me/sheets:
+    get:
+      tags: [Sheets]
+      summary: Get followed and owned sheets
+      responses: { '200': { description: User sheets, content: { application/json: { schema: { type: object, properties: { followed: { type: array, items: { $ref: '#/components/schemas/Sheet' } }, owned: { type: array, items: { $ref: '#/components/schemas/Sheet' } } } } } } } }
+    post:
+      tags: [Sheets]
+      summary: Create a personal sheet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSheetRequest' }
+      responses: { '201': { description: Created sheet, content: { application/json: { schema: { $ref: '#/components/schemas/Sheet' } } } } }
+  /sheets/{sheetId}/follow:
+    put:
+      tags: [Sheets]
+      summary: Follow a sheet
+      parameters: [{ $ref: '#/components/parameters/SheetId' }]
+      responses: { '204': { description: Followed } }
+    delete:
+      tags: [Sheets]
+      summary: Unfollow a sheet
+      parameters: [{ $ref: '#/components/parameters/SheetId' }]
+      responses: { '204': { description: Unfollowed } }
+  /me/sheets/{sheetId}:
+    delete:
+      tags: [Sheets]
+      summary: Delete an owned sheet
+      parameters: [{ $ref: '#/components/parameters/SheetId' }]
+      responses: { '204': { description: Deleted } }
+
+  /me/notes:
+    get:
+      tags: [Notes]
+      summary: List the current user's notes
+      parameters:
+        - { name: kind, in: query, schema: { type: string, enum: [question, general] } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Notes, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Note' } } } } } } } }
+    post:
+      tags: [Notes]
+      summary: Create a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteRequest' }
+      responses: { '201': { description: Created note, content: { application/json: { schema: { $ref: '#/components/schemas/Note' } } } } }
+  /me/notes/{noteId}:
+    patch:
+      tags: [Notes]
+      summary: Edit a note
+      parameters: [{ $ref: '#/components/parameters/NoteId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteRequest' }
+      responses: { '200': { description: Updated note, content: { application/json: { schema: { $ref: '#/components/schemas/Note' } } } } }
+    delete:
+      tags: [Notes]
+      summary: Delete a note
+      parameters: [{ $ref: '#/components/parameters/NoteId' }]
+      responses: { '204': { description: Deleted } }
+
+  /contests:
+    get:
+      tags: [Events]
+      security: []
+      summary: List external coding contests
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: platform, in: query, schema: { type: string } }
+      responses: { '200': { description: Contests, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Contest' } } } } } } } }
+  /me/events:
+    get:
+      tags: [Events]
+      summary: List custom calendar events
+      responses: { '200': { description: Events, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/CalendarEvent' } } } } } } } }
+    post:
+      tags: [Events]
+      summary: Create a custom calendar event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CalendarEventRequest' }
+      responses: { '201': { description: Created event, content: { application/json: { schema: { $ref: '#/components/schemas/CalendarEvent' } } } } }
+  /me/events/{eventId}:
+    delete:
+      tags: [Events]
+      summary: Delete a custom event
+      parameters: [{ $ref: '#/components/parameters/EventId' }]
+      responses: { '204': { description: Deleted } }
+  /me/contest-subscriptions/{contestId}:
+    put:
+      tags: [Events]
+      summary: Subscribe to contest reminders
+      parameters: [{ $ref: '#/components/parameters/ContestId' }]
+      responses: { '204': { description: Subscribed } }
+    delete:
+      tags: [Events]
+      summary: Remove contest reminder
+      parameters: [{ $ref: '#/components/parameters/ContestId' }]
+      responses: { '204': { description: Unsubscribed } }
+  /leaderboard:
+    get:
+      tags: [Leaderboard]
+      security: []
+      summary: Get ranked public profiles
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { name: institution, in: query, schema: { type: string } }
+      responses: { '200': { description: Leaderboard, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedLeaderboard' } } } } }
+
+  /admin/drives:
+    get:
+      tags: [Placement Drives]
+      summary: List placement drives visible to the authenticated user
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { name: status, in: query, schema: { type: string, enum: [draft, published, closed, archived] } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Drives, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedDrives' } } } } }
+    post:
+      tags: [Placement Drives]
+      summary: Create a placement drive draft
+      description: Requires the admin or placement-team role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveRequest' }
+      responses: { '201': { description: Draft drive, content: { application/json: { schema: { $ref: '#/components/schemas/PlacementDrive' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /admin/drives/{driveId}:
+    get:
+      tags: [Placement Drives]
+      summary: Get a drive and its JD details
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      responses: { '200': { description: Placement drive, content: { application/json: { schema: { $ref: '#/components/schemas/PlacementDrive' } } } } }
+    patch:
+      tags: [Placement Drives]
+      summary: Edit a placement drive
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveRequest' }
+      responses: { '200': { description: Updated drive, content: { application/json: { schema: { $ref: '#/components/schemas/PlacementDrive' } } } } }
+    delete:
+      tags: [Placement Drives]
+      summary: Archive a placement drive
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      responses: { '204': { description: Archived } }
+  /admin/drives/{driveId}/publish:
+    post:
+      tags: [Placement Drives]
+      summary: Publish a drive and notify eligible students
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      responses: { '200': { description: Published drive, content: { application/json: { schema: { $ref: '#/components/schemas/PlacementDrive' } } } } }
+  /drives:
+    get:
+      tags: [Placement Drives]
+      security: []
+      summary: List published placement drives for students
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { name: company, in: query, schema: { type: string } }
+        - { name: role, in: query, schema: { type: string } }
+        - { name: location, in: query, schema: { type: string } }
+      responses: { '200': { description: Published drives, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedDrives' } } } } }
+  /drives/{driveId}:
+    get:
+      tags: [Placement Drives]
+      security: []
+      summary: Get a published drive
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      responses: { '200': { description: Published drive, content: { application/json: { schema: { $ref: '#/components/schemas/PlacementDrive' } } } } }
+  /drives/{driveId}/applications:
+    post:
+      tags: [Placement Drives]
+      summary: Apply to a published placement drive
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApplicationRequest' }
+      responses: { '201': { description: Application, content: { application/json: { schema: { $ref: '#/components/schemas/DriveApplication' } } } } }
+  /me/applications:
+    get:
+      tags: [Placement Drives]
+      summary: List the current student's drive applications
+      responses: { '200': { description: Applications, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/DriveApplication' } } } } } } } }
+  /admin/drives/{driveId}/applications:
+    get:
+      tags: [Placement Drives]
+      summary: Review applications for a drive
+      description: Requires the admin or placement-team role.
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      responses: { '200': { description: Applications, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/DriveApplication' } } } } } } } }
+  /admin/drives/{driveId}/documents:
+    post:
+      tags: [Placement Drives]
+      summary: Upload JD, eligibility document, or drive attachment
+      parameters: [{ $ref: '#/components/parameters/DriveId' }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, type]
+              properties:
+                file: { type: string, format: binary }
+                type: { type: string, enum: [job_description, eligibility, brochure, other] }
+      responses: { '201': { description: Uploaded document, content: { application/json: { schema: { $ref: '#/components/schemas/DriveDocument' } } } } }
+
+  /roadmaps:
+    get:
+      tags: [Roadmaps]
+      summary: List the current student's roadmaps
+      responses: { '200': { description: Roadmaps, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/RoadmapSummary' } } } } } } } }
+    post:
+      tags: [Roadmaps]
+      summary: Start AI roadmap generation for a skill
+      description: Returns immediately. Poll the returned generation endpoint until status is completed or failed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoadmapGenerationRequest' }
+      responses: { '202': { description: Generation started, content: { application/json: { schema: { $ref: '#/components/schemas/RoadmapGenerationJob' } } } } }
+  /roadmaps/generations/{generationId}:
+    get:
+      tags: [Roadmaps]
+      summary: Check AI roadmap generation status
+      parameters: [{ $ref: '#/components/parameters/GenerationId' }]
+      responses: { '200': { description: Generation job, content: { application/json: { schema: { $ref: '#/components/schemas/RoadmapGenerationJob' } } } } }
+  /roadmaps/{roadmapId}:
+    get:
+      tags: [Roadmaps]
+      summary: Get a complete clickable roadmap
+      parameters: [{ $ref: '#/components/parameters/RoadmapId' }]
+      responses: { '200': { description: Roadmap, content: { application/json: { schema: { $ref: '#/components/schemas/Roadmap' } } } } }
+    patch:
+      tags: [Roadmaps]
+      summary: Rename, pause, or archive a roadmap
+      parameters: [{ $ref: '#/components/parameters/RoadmapId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, properties: { title: { type: string }, status: { type: string, enum: [active, paused, archived] } } }
+      responses: { '200': { description: Updated roadmap, content: { application/json: { schema: { $ref: '#/components/schemas/Roadmap' } } } } }
+  /roadmaps/{roadmapId}/milestones/{milestoneId}:
+    patch:
+      tags: [Roadmaps]
+      summary: Update milestone progress
+      parameters:
+        - { $ref: '#/components/parameters/RoadmapId' }
+        - { $ref: '#/components/parameters/MilestoneId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [status], properties: { status: { type: string, enum: [locked, todo, in_progress, completed] } } }
+      responses: { '200': { description: Updated milestone, content: { application/json: { schema: { $ref: '#/components/schemas/Milestone' } } } } }
+
+  /faqs:
+    get:
+      tags: [Support]
+      security: []
+      summary: List frequently asked questions
+      responses: { '200': { description: FAQs, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Faq' } } } } } } } }
+  /feedback:
+    post:
+      tags: [Support]
+      summary: Submit product feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeedbackRequest' }
+      responses: { '201': { description: Feedback received, content: { application/json: { schema: { $ref: '#/components/schemas/Feedback' } } } } }
+
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    PageSize: { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    ConnectionId: { name: connectionId, in: path, required: true, schema: { type: string } }
+    QuestionId: { name: questionId, in: path, required: true, schema: { type: string } }
+    SheetId: { name: sheetId, in: path, required: true, schema: { type: string } }
+    NoteId: { name: noteId, in: path, required: true, schema: { type: string } }
+    ContestId: { name: contestId, in: path, required: true, schema: { type: string } }
+    EventId: { name: eventId, in: path, required: true, schema: { type: string } }
+    DriveId: { name: driveId, in: path, required: true, schema: { type: string } }
+    RoadmapId: { name: roadmapId, in: path, required: true, schema: { type: string } }
+    GenerationId: { name: generationId, in: path, required: true, schema: { type: string } }
+    MilestoneId: { name: milestoneId, in: path, required: true, schema: { type: string } }
+  responses:
+    Unauthorized: { description: Missing or invalid authentication token }
+    Forbidden: { description: Authenticated user lacks the required role }
+    Conflict: { description: Resource already exists }
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [name, email, password, institution]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, format: password }
+        institution: { type: string, maxLength: 200 }
+        graduationYear: { type: integer, minimum: 2000, maximum: 2100 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties: { email: { type: string, format: email }, password: { type: string, format: password } }
+    TokenPair:
+      type: object
+      required: [accessToken, refreshToken, expiresIn]
+      properties: { accessToken: { type: string }, refreshToken: { type: string }, expiresIn: { type: integer } }
+    AuthResponse:
+      type: object
+      required: [user, tokens]
+      properties: { user: { $ref: '#/components/schemas/User' }, tokens: { $ref: '#/components/schemas/TokenPair' } }
+    User:
+      type: object
+      required: [id, name, email, role, visibility]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        handle: { type: string }
+        location: { type: string }
+        institution: { type: string }
+        about: { type: string }
+        avatarUrl: { type: [string, 'null'], format: uri }
+        role: { type: string, enum: [student, admin, placement_team] }
+        visibility: { type: string, enum: [public, private] }
+        graduationYear: { type: integer }
+        preferredRoles: { type: array, items: { type: string } }
+        links: { type: object, additionalProperties: { type: string, format: uri } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        name: { type: string, maxLength: 100 }
+        handle: { type: string, pattern: '^[A-Za-z0-9_]{3,30}$' }
+        location: { type: string, maxLength: 100 }
+        institution: { type: string, maxLength: 200 }
+        about: { type: string, maxLength: 1000 }
+        visibility: { type: string, enum: [public, private] }
+        preferredRoles: { type: array, items: { type: string } }
+        links: { type: object, additionalProperties: { type: string, format: uri } }
+    PlatformConnectionRequest:
+      type: object
+      required: [platform, handle]
+      properties: { platform: { type: string }, handle: { type: string }, profileUrl: { type: string, format: uri } }
+    PlatformConnection:
+      allOf:
+        - $ref: '#/components/schemas/PlatformConnectionRequest'
+        - type: object
+          required: [id, connected, lastSyncedAt]
+          properties: { id: { type: string }, connected: { type: boolean }, lastSyncedAt: { type: string, format: date-time }, stats: { type: object, additionalProperties: true } }
+    Portfolio:
+      type: object
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        stats: { type: object, additionalProperties: true }
+        platforms: { type: array, items: { $ref: '#/components/schemas/PlatformConnection' } }
+        awards: { type: array, items: { type: object, additionalProperties: true } }
+        activity: { type: array, items: { type: object, additionalProperties: true } }
+    Dashboard:
+      type: object
+      properties: { portfolio: { $ref: '#/components/schemas/Portfolio' }, upcomingContests: { type: array, items: { $ref: '#/components/schemas/Contest' } }, followedSheets: { type: array, items: { $ref: '#/components/schemas/Sheet' } }, leaderboardPreview: { type: array, items: { $ref: '#/components/schemas/LeaderboardEntry' } } }
+    Difficulty: { type: string, enum: [Easy, Medium, Hard] }
+    QuestionStatus: { type: string, enum: [Solved, Attempted, Todo] }
+    Question:
+      type: object
+      required: [id, title, difficulty, platform, topics]
+      properties: { id: { type: string }, title: { type: string }, difficulty: { $ref: '#/components/schemas/Difficulty' }, platform: { type: string }, topics: { type: array, items: { type: string } }, url: { type: string, format: uri }, companyIds: { type: array, items: { type: string } } }
+    TrackedQuestion:
+      allOf:
+        - $ref: '#/components/schemas/Question'
+        - type: object
+          required: [status]
+          properties: { status: { $ref: '#/components/schemas/QuestionStatus' }, solvedAt: { type: [string, 'null'], format: date-time }, notesCount: { type: integer } }
+    Sheet:
+      type: object
+      properties: { id: { type: string }, title: { type: string }, description: { type: string }, author: { type: string }, questionsCount: { type: integer }, followersCount: { type: integer }, progress: { type: number, minimum: 0, maximum: 100 }, tags: { type: array, items: { type: string } } }
+    CreateSheetRequest:
+      type: object
+      required: [title]
+      properties: { title: { type: string, maxLength: 150 }, description: { type: string }, questionIds: { type: array, items: { type: string } } }
+    NoteRequest:
+      type: object
+      required: [title, body, kind]
+      properties: { title: { type: string, maxLength: 200 }, body: { type: string, maxLength: 10000 }, kind: { type: string, enum: [question, general] }, questionId: { type: [string, 'null'] } }
+    Note:
+      allOf:
+        - $ref: '#/components/schemas/NoteRequest'
+        - type: object
+          required: [id, createdAt, updatedAt]
+          properties: { id: { type: string }, createdAt: { type: string, format: date-time }, updatedAt: { type: string, format: date-time } }
+    Contest:
+      type: object
+      properties: { id: { type: string }, name: { type: string }, platform: { type: string }, startsAt: { type: string, format: date-time }, endsAt: { type: string, format: date-time }, url: { type: string, format: uri }, subscribersCount: { type: integer } }
+    CalendarEventRequest:
+      type: object
+      required: [title, date]
+      properties: { title: { type: string }, date: { type: string, format: date }, startTime: { type: string, format: time }, note: { type: string } }
+    CalendarEvent:
+      allOf:
+        - $ref: '#/components/schemas/CalendarEventRequest'
+        - type: object
+          required: [id]
+          properties: { id: { type: string } }
+    LeaderboardEntry:
+      type: object
+      properties: { rank: { type: integer }, user: { $ref: '#/components/schemas/User' }, cScore: { type: number }, solvedQuestions: { type: integer } }
+    DriveRequest:
+      type: object
+      required: [companyName, roleTitle, applicationDeadline, eligibility, jobDescription]
+      properties:
+        companyName: { type: string, maxLength: 150 }
+        companyLogoUrl: { type: string, format: uri }
+        roleTitle: { type: string, maxLength: 150 }
+        employmentType: { type: string, enum: [full_time, internship, internship_to_full_time] }
+        locations: { type: array, items: { type: string } }
+        applicationDeadline: { type: string, format: date-time }
+        driveDate: { type: [string, 'null'], format: date-time }
+        eligibility: { $ref: '#/components/schemas/Eligibility' }
+        jobDescription: { $ref: '#/components/schemas/JobDescription' }
+        selectionProcess: { type: array, items: { type: string } }
+        packageDetails: { type: object, additionalProperties: true }
+        contactEmail: { type: string, format: email }
+    Eligibility:
+      type: object
+      required: [minimumCgpa]
+      properties: { minimumCgpa: { type: number, minimum: 0, maximum: 10 }, allowedBranches: { type: array, items: { type: string } }, graduationYears: { type: array, items: { type: integer } }, backlogsAllowed: { type: boolean }, requiredSkills: { type: array, items: { type: string } } }
+    JobDescription:
+      type: object
+      required: [summary, responsibilities, requiredSkills]
+      properties: { summary: { type: string }, responsibilities: { type: array, items: { type: string } }, requiredSkills: { type: array, items: { type: string } }, preferredSkills: { type: array, items: { type: string } } }
+    PlacementDrive:
+      allOf:
+        - $ref: '#/components/schemas/DriveRequest'
+        - type: object
+          required: [id, status, createdBy, createdAt, updatedAt]
+          properties: { id: { type: string }, status: { type: string, enum: [draft, published, closed, archived] }, createdBy: { type: string }, documents: { type: array, items: { $ref: '#/components/schemas/DriveDocument' } }, applicationsCount: { type: integer }, createdAt: { type: string, format: date-time }, updatedAt: { type: string, format: date-time } }
+    DriveDocument:
+      type: object
+      properties: { id: { type: string }, type: { type: string, enum: [job_description, eligibility, brochure, other] }, fileName: { type: string }, url: { type: string, format: uri }, uploadedAt: { type: string, format: date-time } }
+    ApplicationRequest:
+      type: object
+      required: [resumeUrl, consent]
+      properties: { resumeUrl: { type: string, format: uri }, coverNote: { type: string }, consent: { type: boolean, const: true } }
+    DriveApplication:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationRequest'
+        - type: object
+          required: [id, driveId, studentId, status, appliedAt]
+          properties: { id: { type: string }, driveId: { type: string }, studentId: { type: string }, status: { type: string, enum: [submitted, under_review, shortlisted, rejected, selected, withdrawn] }, appliedAt: { type: string, format: date-time } }
+    RoadmapGenerationRequest:
+      type: object
+      required: [skill]
+      properties: { skill: { type: string, minLength: 2, maxLength: 100 }, currentLevel: { type: string, enum: [beginner, intermediate, advanced] }, weeklyHours: { type: integer, minimum: 1, maximum: 80 }, targetDate: { type: [string, 'null'], format: date }, context: { type: string, maxLength: 2000 } }
+    RoadmapGenerationJob:
+      type: object
+      required: [id, status, skill]
+      properties: { id: { type: string }, status: { type: string, enum: [queued, processing, completed, failed] }, skill: { type: string }, roadmapId: { type: [string, 'null'] }, error: { type: [string, 'null'] }, createdAt: { type: string, format: date-time }, completedAt: { type: [string, 'null'], format: date-time } }
+    RoadmapSummary:
+      type: object
+      properties: { id: { type: string }, title: { type: string }, skill: { type: string }, status: { type: string, enum: [active, paused, archived] }, progress: { type: number, minimum: 0, maximum: 100 }, totalMilestones: { type: integer }, completedMilestones: { type: integer }, updatedAt: { type: string, format: date-time } }
+    Roadmap:
+      allOf:
+        - $ref: '#/components/schemas/RoadmapSummary'
+        - type: object
+          properties: { description: { type: string }, currentLevel: { type: string }, weeklyHours: { type: integer }, sections: { type: array, items: { $ref: '#/components/schemas/RoadmapSection' } } }
+    RoadmapSection:
+      type: object
+      properties: { id: { type: string }, title: { type: string }, description: { type: string }, order: { type: integer }, milestones: { type: array, items: { $ref: '#/components/schemas/Milestone' } } }
+    Milestone:
+      type: object
+      properties: { id: { type: string }, title: { type: string }, description: { type: string }, order: { type: integer }, status: { type: string, enum: [locked, todo, in_progress, completed] }, estimatedHours: { type: number }, resources: { type: array, items: { $ref: '#/components/schemas/RoadmapResource' } }, completedAt: { type: [string, 'null'], format: date-time } }
+    RoadmapResource:
+      type: object
+      properties: { title: { type: string }, type: { type: string, enum: [article, video, course, problem, project, assessment] }, url: { type: string, format: uri }, durationMinutes: { type: integer } }
+    Faq: { type: object, required: [question, answer], properties: { question: { type: string }, answer: { type: string } } }
+    FeedbackRequest: { type: object, required: [message], properties: { message: { type: string, maxLength: 5000 }, category: { type: string, enum: [bug, feature, content, other] }, pageUrl: { type: string, format: uri } } }
+    Feedback: { allOf: [{ $ref: '#/components/schemas/FeedbackRequest' }, { type: object, properties: { id: { type: string }, status: { type: string, enum: [received, reviewed, resolved] }, createdAt: { type: string, format: date-time } } }] }
+    Pagination: { type: object, required: [page, pageSize, total], properties: { page: { type: integer }, pageSize: { type: integer }, total: { type: integer }, totalPages: { type: integer } } }
+    PaginatedQuestions: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Question' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }
+    PaginatedTrackedQuestions: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/TrackedQuestion' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }
+    PaginatedSheets: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Sheet' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }
+    PaginatedLeaderboard: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/LeaderboardEntry' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }
+    PaginatedDrives: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/PlacementDrive' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }

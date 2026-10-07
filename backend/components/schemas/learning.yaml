@@ -1,0 +1,57 @@
+Difficulty: { type: string, enum: [Easy, Medium, Hard] }
+QuestionStatus: { type: string, enum: [Solved, Attempted, Todo] }
+Question:
+  type: object
+  required: [id, title, difficulty, platform, topics]
+  properties:
+    id: { type: string }
+    title: { type: string }
+    difficulty: { $ref: '#/Difficulty' }
+    platform: { type: string }
+    topics: { type: array, items: { type: string } }
+    url: { type: string, format: uri }
+    companyIds: { type: array, items: { type: string } }
+TrackedQuestion:
+  allOf:
+    - $ref: '#/Question'
+    - type: object
+      required: [status]
+      properties:
+        status: { $ref: '#/QuestionStatus' }
+        solvedAt: { type: [string, 'null'], format: date-time }
+        notesCount: { type: integer }
+Sheet:
+  type: object
+  properties:
+    id: { type: string }
+    title: { type: string }
+    description: { type: string }
+    author: { type: string }
+    questionsCount: { type: integer }
+    followersCount: { type: integer }
+    progress: { type: number, minimum: 0, maximum: 100 }
+    tags: { type: array, items: { type: string } }
+CreateSheetRequest:
+  type: object
+  required: [title]
+  properties:
+    title: { type: string, maxLength: 150 }
+    description: { type: string }
+    questionIds: { type: array, items: { type: string } }
+NoteRequest:
+  type: object
+  required: [title, body, kind]
+  properties:
+    title: { type: string, maxLength: 200 }
+    body: { type: string, maxLength: 10000 }
+    kind: { type: string, enum: [question, general] }
+    questionId: { type: [string, 'null'] }
+Note:
+  allOf:
+    - $ref: '#/NoteRequest'
+    - type: object
+      required: [id, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }

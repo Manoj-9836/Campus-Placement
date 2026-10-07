@@ -1,0 +1,66 @@
+RoadmapGenerationRequest:
+  type: object
+  required: [skill]
+  properties:
+    skill: { type: string, minLength: 2, maxLength: 100 }
+    currentLevel: { type: string, enum: [beginner, intermediate, advanced] }
+    weeklyHours: { type: integer, minimum: 1, maximum: 80 }
+    targetDate: { type: [string, 'null'], format: date }
+    context: { type: string, maxLength: 2000 }
+RoadmapGenerationJob:
+  type: object
+  required: [id, status, skill]
+  properties:
+    id: { type: string }
+    status: { type: string, enum: [queued, processing, completed, failed] }
+    skill: { type: string }
+    roadmapId: { type: [string, 'null'] }
+    error: { type: [string, 'null'] }
+    createdAt: { type: string, format: date-time }
+    completedAt: { type: [string, 'null'], format: date-time }
+RoadmapSummary:
+  type: object
+  properties:
+    id: { type: string }
+    title: { type: string }
+    skill: { type: string }
+    status: { type: string, enum: [active, paused, archived] }
+    progress: { type: number, minimum: 0, maximum: 100 }
+    totalMilestones: { type: integer }
+    completedMilestones: { type: integer }
+    updatedAt: { type: string, format: date-time }
+Roadmap:
+  allOf:
+    - $ref: '#/RoadmapSummary'
+    - type: object
+      properties:
+        description: { type: string }
+        currentLevel: { type: string }
+        weeklyHours: { type: integer }
+        sections: { type: array, items: { $ref: '#/RoadmapSection' } }
+RoadmapSection:
+  type: object
+  properties:
+    id: { type: string }
+    title: { type: string }
+    description: { type: string }
+    order: { type: integer }
+    milestones: { type: array, items: { $ref: '#/Milestone' } }
+Milestone:
+  type: object
+  properties:
+    id: { type: string }
+    title: { type: string }
+    description: { type: string }
+    order: { type: integer }
+    status: { type: string, enum: [locked, todo, in_progress, completed] }
+    estimatedHours: { type: number }
+    resources: { type: array, items: { $ref: '#/RoadmapResource' } }
+    completedAt: { type: [string, 'null'], format: date-time }
+RoadmapResource:
+  type: object
+  properties:
+    title: { type: string }
+    type: { type: string, enum: [article, video, course, problem, project, assessment] }
+    url: { type: string, format: uri }
+    durationMinutes: { type: integer }

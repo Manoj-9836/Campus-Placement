@@ -1,23 +1,44 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, Flame, Moon, PanelLeft, Sun, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { AppSidebar } from "./AppSidebar";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { currentUser } from "@/lib/mock-data";
+import { appConfig } from "@/config/app";
+import { cn } from "@/lib/utils";
 
 function useThemeToggle() {
   const [dark, setDark] = useState(true);
-  const toggle = () => {
-    setDark((d) => {
-      const next = !d;
-      document.documentElement.classList.toggle("light", !next);
-      return next;
-    });
-  };
+  const [themeReady, setThemeReady] = useState(false);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("lendi.theme");
+    setDark(saved ? saved !== "light" : true);
+    setThemeReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!themeReady) return;
+    document.documentElement.classList.toggle("light", !dark);
+    window.localStorage.setItem("lendi.theme", dark ? "dark" : "light");
+  }, [dark, themeReady]);
+
+  const toggle = () => setDark((current) => !current);
   return { dark, toggle };
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  hideHeader = false,
+  fullWidth = false,
+  wideSidebar = false,
+}: {
+  children: ReactNode;
+  hideHeader?: boolean;
+  fullWidth?: boolean;
+  wideSidebar?: boolean;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { dark, toggle } = useThemeToggle();
@@ -26,7 +47,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
       {!collapsed && (
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-sidebar-border lg:block">
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-30 hidden border-r border-sidebar-border lg:block",
+            wideSidebar ? "w-80" : "w-64",
+          )}
+        >
           <AppSidebar />
         </aside>
       )}
@@ -39,20 +65,30 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SheetContent>
       </Sheet>
 
-      <div className={`flex min-w-0 flex-1 flex-col ${collapsed ? "" : "lg:pl-64"}`}>
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur sm:px-5">
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col",
+          !collapsed && (wideSidebar ? "lg:pl-80" : "lg:pl-64"),
+        )}
+      >
+        <header
+          className={cn(
+            "sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur sm:px-5",
+            hideHeader && "lg:hidden",
+          )}
+        >
           <button
             type="button"
             aria-label="Toggle navigation"
-            onClick={() => (window.innerWidth < 1024 ? setMobileOpen(true) : setCollapsed((c) => !c))}
+            onClick={() =>
+              window.innerWidth < 1024 ? setMobileOpen(true) : setCollapsed((c) => !c)
+            }
             className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <PanelLeft className="size-5" />
           </button>
 
-          <span className="text-base font-semibold lg:hidden">
-            Cod<span className="text-primary">olio</span>
-          </span>
+          <span className="text-base font-semibold lg:hidden">{appConfig.name}</span>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-3">
             <Link
@@ -68,10 +104,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               {currentUser.streak}
             </span>
 
-            {/* BACKEND PLACEHOLDER: notifications feed */}
             <button
               type="button"
               aria-label="Notifications"
+              onClick={() => toast.message("Notifications will appear here when enabled.")}
               className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <Bell className="size-5" />
@@ -94,7 +130,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-3 py-5 sm:px-5 lg:px-8">{children}</main>
+        <main className={cn("min-w-0 flex-1 px-3 py-5 sm:px-5 lg:px-8", fullWidth && "!p-0")}>
+          {children}
+        </main>
       </div>
     </div>
   );

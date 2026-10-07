@@ -17,12 +17,13 @@ import {
 export const Route = createFileRoute("/my-sheets")({
   head: () => ({
     meta: [
-      { title: "My Sheets — Codolio" },
+      { title: "My Sheets — Lendi" },
       {
         name: "description",
-        content: "Sheets you follow and custom sheets you created, with live progress on every question set.",
+        content:
+          "Sheets you follow and custom sheets you created, with live progress on every question set.",
       },
-      { property: "og:title", content: "My Sheets — Codolio" },
+      { property: "og:title", content: "My Sheets — Lendi" },
       {
         property: "og:description",
         content: "Manage the sheets you follow and build your own custom question sets.",
@@ -73,7 +74,9 @@ function MySheetsPage() {
         }
       />
 
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Following</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        Following
+      </h2>
       {followedSheets.length === 0 ? (
         <div className="card-surface mt-3 grid place-items-center p-10 text-center">
           <p className="text-sm text-muted-foreground">You aren't following any sheet yet.</p>
@@ -106,7 +109,10 @@ function MySheetsPage() {
                 {s.questions} questions · by {s.author}
               </p>
               <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${s.progress}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${s.progress}%` }}
+                />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">{s.progress}% complete</p>
               <button
@@ -121,11 +127,14 @@ function MySheetsPage() {
         </div>
       )}
 
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted-foreground">Created by me</h2>
+      <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        Created by me
+      </h2>
       {customSheets.length === 0 ? (
         <div className="card-surface mt-3 grid place-items-center p-10 text-center">
           <p className="text-sm text-muted-foreground">
-            You haven't created a sheet yet. Group your favourite questions into a custom sheet and share it.
+            You haven't created a sheet yet. Group your favourite questions into a custom sheet and
+            share it.
           </p>
           <button
             type="button"
@@ -155,7 +164,10 @@ function MySheetsPage() {
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{s.questions} questions · by you</p>
               <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${s.progress}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${s.progress}%` }}
+                />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">{s.progress}% complete</p>
               <button
@@ -174,20 +186,35 @@ function MySheetsPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create a sheet</DialogTitle>
-            <DialogDescription>Group your favourite questions into your own custom sheet.</DialogDescription>
+            <DialogDescription>
+              Group your favourite questions into your own custom sheet.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
               <label className="text-sm font-medium" htmlFor="sheet-title">
                 Sheet name
               </label>
-              <input id="sheet-title" name="title" required placeholder="My revision 50" className={field} />
+              <input
+                id="sheet-title"
+                name="title"
+                required
+                placeholder="My revision 50"
+                className={field}
+              />
             </div>
             <div>
               <label className="text-sm font-medium" htmlFor="sheet-count">
                 Number of questions
               </label>
-              <input id="sheet-count" name="count" type="number" min={0} defaultValue={0} className={field} />
+              <input
+                id="sheet-count"
+                name="count"
+                type="number"
+                min={0}
+                defaultValue={0}
+                className={field}
+              />
             </div>
             <DialogFooter>
               <button

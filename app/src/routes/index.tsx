@@ -11,8 +11,6 @@ import {
   RefreshCw,
   TrendingUp,
   Trophy,
-
-
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { currentUser, contests, sheets, leaderboard, questions, companies } from "@/lib/mock-data";
@@ -20,16 +18,20 @@ import { currentUser, contests, sheets, leaderboard, questions, companies } from
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Codolio — One place to track your coding journey" },
+      { title: "Lendi — One place to track your coding journey" },
       {
         name: "description",
         content:
           "Track DSA progress, coding profiles, contests, sheets and notes in one dashboard. Compare on the global leaderboard and prepare company-wise.",
       },
-      { property: "og:title", content: "Codolio — Track your coding journey" },
+      {
+        property: "og:title",
+        content: "Lendi — Track your coding journey",
+      },
       {
         property: "og:description",
-        content: "DSA tracker, contest calendar, company-wise interview kit and coding portfolio in one place.",
+        content:
+          "DSA tracker, contest calendar, company-wise interview kit and coding portfolio in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,12 +41,42 @@ export const Route = createFileRoute("/")({
 });
 
 const modules = [
-  { title: "Portfolio", to: "/portfolio", icon: Globe, text: "One profile that aggregates every coding platform you use." },
-  { title: "Company Wise Kit", to: "/company-wise-kit", icon: ClipboardList, text: "Most asked questions per company, filtered by recency." },
-  { title: "My Workspace", to: "/workspace", icon: BarChart3, text: "Track every question you solve with status, notes and topics." },
-  { title: "Explore Sheets", to: "/explore-sheets", icon: FileText, text: "Follow curated sheets from the best creators in the community." },
-  { title: "Contests", to: "/contests", icon: CalendarDays, text: "Never miss a contest across LeetCode, CodeChef, Codeforces and more." },
-  { title: "Leaderboard", to: "/leaderboard", icon: Trophy, text: "See where you stand globally with the balanced C Score." },
+  {
+    title: "Portfolio",
+    to: "/portfolio",
+    icon: Globe,
+    text: "One profile that aggregates every coding platform you use.",
+  },
+  {
+    title: "Company Wise Kit",
+    to: "/company-wise-kit",
+    icon: ClipboardList,
+    text: "Most asked questions per company, filtered by recency.",
+  },
+  {
+    title: "My Workspace",
+    to: "/workspace",
+    icon: BarChart3,
+    text: "Track every question you solve with status, notes and topics.",
+  },
+  {
+    title: "Explore Sheets",
+    to: "/explore-sheets",
+    icon: FileText,
+    text: "Follow curated sheets from the best creators in the community.",
+  },
+  {
+    title: "Contests",
+    to: "/contests",
+    icon: CalendarDays,
+    text: "Never miss a contest across LeetCode, CodeChef, Codeforces and more.",
+  },
+  {
+    title: "Leaderboard",
+    to: "/leaderboard",
+    icon: Trophy,
+    text: "See where you stand globally with the balanced C Score.",
+  },
 ];
 
 function HomePage() {
@@ -52,24 +84,31 @@ function HomePage() {
     <AppShell>
       <section className="card-surface relative overflow-hidden p-6 sm:p-10">
         <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-primary/20 blur-3xl" />
+
         <p className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          <Flame className="size-3.5" /> {currentUser.streak} day streak — keep it going
+          <Flame className="size-3.5" />
+          {currentUser.streak} day streak — keep it going
         </p>
+
         <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
           Welcome back, {currentUser.name.split(" ")[0]}. Your{" "}
           <span className="gradient-text">coding journey</span> in one place.
         </h1>
+
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Profile tracker, question tracker, contest calendar and community leaderboard — all connected to a single
-          portfolio you can share with recruiters.
+          Profile tracker, question tracker, contest calendar and community leaderboard — all
+          connected to a single portfolio you can share with recruiters.
         </p>
+
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             to="/portfolio"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
-            View my portfolio <ArrowRight className="size-4" />
+            View my portfolio
+            <ArrowRight className="size-4" />
           </Link>
+
           <Link
             to="/explore-sheets"
             className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-accent"
@@ -84,10 +123,12 @@ function HomePage() {
             { label: "Global Rank", value: `#${currentUser.globalRank}` },
             { label: "Questions", value: 651 },
             { label: "Active Days", value: 128 },
-          ].map((s) => (
-            <div key={s.label} className="rounded-lg border border-border bg-surface p-4">
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</dt>
-              <dd className="mt-1 text-xl font-semibold sm:text-2xl">{s.value}</dd>
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-lg border border-border bg-surface p-4">
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                {stat.label}
+              </dt>
+              <dd className="mt-1 text-xl font-semibold sm:text-2xl">{stat.value}</dd>
             </div>
           ))}
         </dl>
@@ -97,18 +138,23 @@ function HomePage() {
         <div className="min-w-0">
           <section>
             <h2 className="text-lg font-semibold">All modules</h2>
+
             <div className="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-              {modules.map((m) => (
+              {modules.map((module) => (
                 <Link
-                  key={m.to}
-                  to={m.to}
+                  key={module.to}
+                  to={module.to}
                   className="card-surface group p-5 transition-colors hover:border-primary/50 hover:bg-surface-hover"
                 >
-                  <m.icon className="size-6 text-primary" />
-                  <h3 className="mt-3 font-semibold">{m.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{m.text}</p>
+                  <module.icon className="size-6 text-primary" />
+
+                  <h3 className="mt-3 font-semibold">{module.title}</h3>
+
+                  <p className="mt-1 text-sm text-muted-foreground">{module.text}</p>
+
                   <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                    Open <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                    Open
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                   </span>
                 </Link>
               ))}
@@ -119,22 +165,26 @@ function HomePage() {
             <div className="card-surface p-5 lg:col-span-2">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold">Upcoming contests</h2>
+
                 <Link to="/contests" className="text-sm text-primary hover:underline">
                   View calendar
                 </Link>
               </div>
+
               <ul className="mt-4 space-y-3">
-                {contests.slice(0, 4).map((c) => (
+                {contests.slice(0, 4).map((contest) => (
                   <li
-                    key={c.id}
+                    key={contest.id}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{c.name}</p>
+                      <p className="truncate text-sm font-medium">{contest.name}</p>
+
                       <p className="text-xs text-muted-foreground">
-                        {c.platform} · {c.day} · {c.start}
+                        {contest.platform} · {contest.day} · {contest.start}
                       </p>
                     </div>
+
                     {/* BACKEND PLACEHOLDER: contest subscription */}
                     <span className="rounded-md border border-primary/40 px-3 py-1 text-xs font-medium text-primary">
                       Subscribe
@@ -147,19 +197,23 @@ function HomePage() {
             <div className="card-surface p-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold">Top coders</h2>
+
                 <Link to="/leaderboard" className="text-sm text-primary hover:underline">
                   All
                 </Link>
               </div>
+
               <ul className="mt-4 space-y-3">
-                {leaderboard.slice(0, 5).map((u) => (
-                  <li key={u.rank} className="flex items-center gap-3">
-                    <span className="w-6 text-sm font-semibold text-primary">#{u.rank}</span>
+                {leaderboard.slice(0, 5).map((user) => (
+                  <li key={user.rank} className="flex items-center gap-3">
+                    <span className="w-6 text-sm font-semibold text-primary">#{user.rank}</span>
+
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{u.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{u.handle}</p>
+                      <p className="truncate text-sm font-medium">{user.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{user.handle}</p>
                     </div>
-                    <span className="text-sm font-semibold">{u.cScore}</span>
+
+                    <span className="text-sm font-semibold">{user.cScore}</span>
                   </li>
                 ))}
               </ul>
@@ -169,16 +223,22 @@ function HomePage() {
           <section className="mt-8">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Popular sheets</h2>
+
               <Link to="/explore-sheets" className="text-sm text-primary hover:underline">
                 Explore all
               </Link>
             </div>
+
             <div className="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-              {sheets.slice(0, 4).map((s) => (
-                <div key={s.id} className="card-surface p-4">
-                  <p className="truncate font-semibold text-primary">{s.title}</p>
-                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
-                  <p className="mt-3 text-xs text-muted-foreground">{s.questions} questions</p>
+              {sheets.slice(0, 4).map((sheet) => (
+                <div key={sheet.id} className="card-surface p-4">
+                  <p className="truncate font-semibold text-primary">{sheet.title}</p>
+
+                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                    {sheet.description}
+                  </p>
+
+                  <p className="mt-3 text-xs text-muted-foreground">{sheet.questions} questions</p>
                 </div>
               ))}
             </div>
@@ -203,45 +263,58 @@ function RightRail() {
           <RefreshCw className="size-4 text-primary" />
           <h2 className="font-semibold">Daily Revision</h2>
         </div>
+
         <p className="mt-1 text-xs text-muted-foreground">Questions due for revision today</p>
+
         <ul className="mt-3 space-y-2">
-          {questions.slice(0, 3).map((q) => (
-            <li key={q.id} className="rounded-lg border border-border bg-surface p-3">
-              <p className="truncate text-sm font-medium">{q.title}</p>
+          {questions.slice(0, 3).map((question) => (
+            <li key={question.id} className="rounded-lg border border-border bg-surface p-3">
+              <p className="truncate text-sm font-medium">{question.title}</p>
+
               <p className="text-xs text-muted-foreground">
-                {q.platform} · {q.difficulty}
+                {question.platform} · {question.difficulty}
               </p>
             </li>
           ))}
         </ul>
-        <Link to="/workspace" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-          Open workspace <ArrowRight className="size-3.5" />
+
+        <Link
+          to="/workspace"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          Open workspace
+          <ArrowRight className="size-3.5" />
         </Link>
       </div>
-
 
       <div className="card-surface p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">This week</h2>
-          <span className="text-xs text-muted-foreground">{weekActivity.reduce((a, b) => a + b, 0)} solved</span>
+
+          <span className="text-xs text-muted-foreground">
+            {weekActivity.reduce((total, value) => total + value, 0)} solved
+          </span>
         </div>
+
         <div className="mt-4 grid grid-cols-7 gap-2">
-          {weekDays.map((d, i) => {
-            const v = weekActivity[i] ?? 0;
+          {weekDays.map((day, index) => {
+            const value = weekActivity[index] ?? 0;
+
             return (
-              <div key={`${d}-${i}`} className="text-center">
+              <div key={`${day}-${index}`} className="text-center">
                 <div
                   className={`mx-auto flex size-8 items-center justify-center rounded-md text-xs font-semibold ${
-                    v === 0
+                    value === 0
                       ? "border border-border bg-surface text-muted-foreground"
-                      : v < 3
+                      : value < 3
                         ? "bg-primary/30 text-foreground"
                         : "bg-primary text-primary-foreground"
                   }`}
                 >
-                  {v}
+                  {value}
                 </div>
-                <span className="mt-1 block text-[10px] text-muted-foreground">{d}</span>
+
+                <span className="mt-1 block text-[10px] text-muted-foreground">{day}</span>
               </div>
             );
           })}
@@ -253,13 +326,17 @@ function RightRail() {
           <TrendingUp className="size-4 text-primary" />
           <h2 className="font-semibold">Trending sheets</h2>
         </div>
+
         <ul className="mt-3 space-y-2">
-          {sheets.slice(0, 4).map((s) => (
-            <li key={s.id} className="flex items-center justify-between gap-2">
+          {sheets.slice(0, 4).map((sheet) => (
+            <li key={sheet.id} className="flex items-center justify-between gap-2">
               <Link to="/explore-sheets" className="min-w-0 truncate text-sm hover:text-primary">
-                {s.title}
+                {sheet.title}
               </Link>
-              <span className="shrink-0 text-xs text-muted-foreground">{s.followers.toLocaleString()}</span>
+
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {sheet.followers.toLocaleString()}
+              </span>
             </li>
           ))}
         </ul>
@@ -270,13 +347,15 @@ function RightRail() {
           <Building2 className="size-4 text-primary" />
           <h2 className="font-semibold">Trending companies</h2>
         </div>
+
         <ul className="mt-3 space-y-2">
-          {companies.slice(0, 5).map((c) => (
-            <li key={c.name} className="flex items-center justify-between gap-2">
+          {companies.slice(0, 5).map((company) => (
+            <li key={company.name} className="flex items-center justify-between gap-2">
               <Link to="/company-wise-kit" className="truncate text-sm hover:text-primary">
-                {c.name}
+                {company.name}
               </Link>
-              <span className="text-xs text-muted-foreground">{c.questions} Qs</span>
+
+              <span className="shrink-0 text-xs text-muted-foreground">{company.questions} Qs</span>
             </li>
           ))}
         </ul>
@@ -284,4 +363,3 @@ function RightRail() {
     </aside>
   );
 }
-

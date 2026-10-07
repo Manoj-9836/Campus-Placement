@@ -9,16 +9,17 @@ import { toggleFollow, useAppState } from "@/lib/app-store";
 export const Route = createFileRoute("/explore-sheets")({
   head: () => ({
     meta: [
-      { title: "Explore DSA Sheets — Codolio" },
+      { title: "Explore DSA Sheets — Lendi" },
       {
         name: "description",
         content:
           "Browse curated DSA sheets from top creators — Striver A2Z, SDE Sheet, Blind 75, Neetcode 150 and more.",
       },
-      { property: "og:title", content: "Explore DSA Sheets — Codolio" },
+      { property: "og:title", content: "Explore DSA Sheets — Lendi" },
       {
         property: "og:description",
-        content: "Follow curated DSA sheets from the best creators and track progress automatically.",
+        content:
+          "Follow curated DSA sheets from the best creators and track progress automatically.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -47,8 +48,12 @@ function ExploreSheetsPage() {
     <AppShell>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Track Coding Sheets in One Place</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Choose from 30+ structured coding paths</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Track Coding Sheets in One Place
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose from 30+ structured coding paths
+          </p>
         </div>
         <Link
           to="/my-sheets"
@@ -86,16 +91,24 @@ function ExploreSheetsPage() {
         ))}
       </div>
 
-      <h2 className="mt-6 text-lg font-semibold">{filter === "All" ? "All Sheets" : `${filter} Sheets`}</h2>
+      <h2 className="mt-6 text-lg font-semibold">
+        {filter === "All" ? "All Sheets" : `${filter} Sheets`}
+      </h2>
 
       <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {list.map((s) => {
           const isFollowing = followed.includes(s.id);
           return (
-            <article key={s.id} className="card-surface flex flex-col overflow-hidden transition-colors hover:border-primary/50">
+            <article
+              key={s.id}
+              className="card-surface flex flex-col overflow-hidden transition-colors hover:border-primary/50"
+            >
               <div className="flex items-center gap-2 px-3 pt-3">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${s.progress}%` }} />
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${s.progress}%` }}
+                  />
                 </div>
                 <span className="text-xs text-muted-foreground">{s.progress}%</span>
               </div>
@@ -104,7 +117,8 @@ function ExploreSheetsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-semibold">{s.title}</h3>
                   <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                    <Users className="size-3.5" /> {(s.followers + (isFollowing ? 1 : 0)).toLocaleString()}
+                    <Users className="size-3.5" />{" "}
+                    {(s.followers + (isFollowing ? 1 : 0)).toLocaleString()}
                   </span>
                 </div>
                 <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{s.description}</p>
@@ -128,7 +142,11 @@ function ExploreSheetsPage() {
                         : "bg-primary text-primary-foreground hover:opacity-90"
                     }`}
                   >
-                    {isFollowing ? <BookmarkCheck className="size-3.5" /> : <Bookmark className="size-3.5" />}
+                    {isFollowing ? (
+                      <BookmarkCheck className="size-3.5" />
+                    ) : (
+                      <Bookmark className="size-3.5" />
+                    )}
                     {isFollowing ? "Following" : "Follow"}
                   </button>
                 </div>
@@ -136,7 +154,9 @@ function ExploreSheetsPage() {
             </article>
           );
         })}
-        {list.length === 0 ? <p className="text-sm text-muted-foreground">No sheets in this category yet.</p> : null}
+        {list.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No sheets in this category yet.</p>
+        ) : null}
       </div>
     </AppShell>
   );

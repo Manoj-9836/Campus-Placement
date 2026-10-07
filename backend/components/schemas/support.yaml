@@ -1,0 +1,21 @@
+Faq:
+  type: object
+  required: [question, answer]
+  properties:
+    question: { type: string }
+    answer: { type: string }
+FeedbackRequest:
+  type: object
+  required: [message]
+  properties:
+    message: { type: string, maxLength: 5000 }
+    category: { type: string, enum: [bug, feature, content, other] }
+    pageUrl: { type: string, format: uri }
+Feedback:
+  allOf:
+    - $ref: '#/FeedbackRequest'
+    - type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [received, reviewed, resolved] }
+        createdAt: { type: string, format: date-time }

@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 
 export const Route = createFileRoute("/feedback")({
   head: () => ({
     meta: [
-      { title: "Send Feedback — Codolio" },
+      { title: "Send Feedback — Lendi" },
       {
         name: "description",
-        content: "Share bugs, feature requests and ideas to help shape the Codolio coding tracker.",
+        content: "Share bugs, feature requests and ideas to help shape the Lendi coding tracker.",
       },
-      { property: "og:title", content: "Send Feedback — Codolio" },
+      { property: "og:title", content: "Send Feedback — Lendi" },
       {
         property: "og:description",
         content: "Tell us what to build next — report bugs or request features.",
@@ -28,10 +29,15 @@ const types = ["Bug", "Feature request", "General"];
 function FeedbackPage() {
   const [type, setType] = useState("Feature request");
   const [sent, setSent] = useState(false);
+  const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
 
   return (
     <AppShell>
-      <PageHeader title="Feedback" subtitle="Tell us what's broken, missing or worth building next." />
+      <PageHeader
+        title="Feedback"
+        subtitle="Tell us what's broken, missing or worth building next."
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <form
@@ -40,6 +46,7 @@ function FeedbackPage() {
             e.preventDefault();
             // BACKEND PLACEHOLDER: submit feedback to the backend
             setSent(true);
+            toast.success("Feedback saved locally");
           }}
         >
           <fieldset className="flex flex-wrap gap-2">
@@ -66,6 +73,8 @@ function FeedbackPage() {
           <input
             id="fb-title"
             required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="Short summary"
             className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
           />
@@ -76,6 +85,8 @@ function FeedbackPage() {
           <textarea
             id="fb-body"
             required
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
             rows={6}
             placeholder="What happened, what you expected, and steps to reproduce."
             className="mt-2 w-full resize-y rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
@@ -89,7 +100,9 @@ function FeedbackPage() {
           </button>
 
           {sent ? (
-            <p className="mt-3 text-sm text-success">Thanks! Your feedback is queued (frontend only for now).</p>
+            <p className="mt-3 text-sm text-success">
+              Thanks! Your feedback is queued (frontend only for now).
+            </p>
           ) : null}
         </form>
 

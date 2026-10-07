@@ -1,0 +1,33 @@
+Pagination:
+  type: object
+  required: [page, pageSize, total]
+  properties:
+    page: { type: integer }
+    pageSize: { type: integer }
+    total: { type: integer }
+    totalPages: { type: integer }
+PaginatedQuestions:
+  type: object
+  properties:
+    data: { type: array, items: { $ref: './learning.yaml#/Question' } }
+    pagination: { $ref: '#/Pagination' }
+PaginatedTrackedQuestions:
+  type: object
+  properties:
+    data: { type: array, items: { $ref: './learning.yaml#/TrackedQuestion' } }
+    pagination: { $ref: '#/Pagination' }
+PaginatedSheets:
+  type: object
+  properties:
+    data: { type: array, items: { $ref: './learning.yaml#/Sheet' } }
+    pagination: { $ref: '#/Pagination' }
+PaginatedLeaderboard:
+  type: object
+  properties:
+    data: { type: array, items: { $ref: './events.yaml#/LeaderboardEntry' } }
+    pagination: { $ref: '#/Pagination' }
+PaginatedDrives:
+  type: object
+  properties:
+    data: { type: array, items: { $ref: './placement.yaml#/PlacementDrive' } }
+    pagination: { $ref: '#/Pagination' }

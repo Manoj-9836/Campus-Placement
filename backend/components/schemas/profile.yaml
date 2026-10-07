@@ -1,0 +1,62 @@
+User:
+  type: object
+  required: [id, name, email, role, visibility]
+  properties:
+    id: { type: string }
+    name: { type: string }
+    email: { type: string, format: email }
+    handle: { type: string }
+    location: { type: string }
+    institution: { type: string }
+    about: { type: string }
+    avatarUrl: { type: [string, 'null'], format: uri }
+    role: { type: string, enum: [student, admin, placement_team] }
+    visibility: { type: string, enum: [public, private] }
+    graduationYear: { type: integer }
+    preferredRoles: { type: array, items: { type: string } }
+    links: { type: object, additionalProperties: { type: string, format: uri } }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+ProfileUpdateRequest:
+  type: object
+  properties:
+    name: { type: string, maxLength: 100 }
+    handle: { type: string, pattern: '^[A-Za-z0-9_]{3,30}$' }
+    location: { type: string, maxLength: 100 }
+    institution: { type: string, maxLength: 200 }
+    about: { type: string, maxLength: 1000 }
+    visibility: { type: string, enum: [public, private] }
+    preferredRoles: { type: array, items: { type: string } }
+    links: { type: object, additionalProperties: { type: string, format: uri } }
+PlatformConnectionRequest:
+  type: object
+  required: [platform, handle]
+  properties:
+    platform: { type: string }
+    handle: { type: string }
+    profileUrl: { type: string, format: uri }
+PlatformConnection:
+  allOf:
+    - $ref: '#/PlatformConnectionRequest'
+    - type: object
+      required: [id, connected, lastSyncedAt]
+      properties:
+        id: { type: string }
+        connected: { type: boolean }
+        lastSyncedAt: { type: string, format: date-time }
+        stats: { type: object, additionalProperties: true }
+Portfolio:
+  type: object
+  properties:
+    user: { $ref: '#/User' }
+    stats: { type: object, additionalProperties: true }
+    platforms: { type: array, items: { $ref: '#/PlatformConnection' } }
+    awards: { type: array, items: { type: object, additionalProperties: true } }
+    activity: { type: array, items: { type: object, additionalProperties: true } }
+Dashboard:
+  type: object
+  properties:
+    portfolio: { $ref: '#/Portfolio' }
+    upcomingContests: { type: array, items: { $ref: './events.yaml#/Contest' } }
+    followedSheets: { type: array, items: { $ref: './learning.yaml#/Sheet' } }
+    leaderboardPreview: { type: array, items: { $ref: './events.yaml#/LeaderboardEntry' } }

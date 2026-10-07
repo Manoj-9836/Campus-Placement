@@ -1,0 +1,31 @@
+Contest:
+  type: object
+  properties:
+    id: { type: string }
+    name: { type: string }
+    platform: { type: string }
+    startsAt: { type: string, format: date-time }
+    endsAt: { type: string, format: date-time }
+    url: { type: string, format: uri }
+    subscribersCount: { type: integer }
+CalendarEventRequest:
+  type: object
+  required: [title, date]
+  properties:
+    title: { type: string }
+    date: { type: string, format: date }
+    startTime: { type: string, format: time }
+    note: { type: string }
+CalendarEvent:
+  allOf:
+    - $ref: '#/CalendarEventRequest'
+    - type: object
+      required: [id]
+      properties: { id: { type: string } }
+LeaderboardEntry:
+  type: object
+  properties:
+    rank: { type: integer }
+    user: { $ref: './profile.yaml#/User' }
+    cScore: { type: number }
+    solvedQuestions: { type: integer }

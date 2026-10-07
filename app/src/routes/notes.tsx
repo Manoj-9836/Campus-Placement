@@ -1,18 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, Plus, Search } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { notes, generalNotes } from "@/lib/mock-data";
+import { addNote, deleteNote, useAppState, type UserNote } from "@/lib/app-store";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/notes")({
   head: () => ({
     meta: [
-      { title: "Notes — Codolio" },
+      { title: "Notes — Lendi" },
       {
         name: "description",
-        content: "Keep question notes and general revision notes together so every pattern you learn stays handy.",
+        content:
+          "Keep question notes and general revision notes together so every pattern you learn stays handy.",
       },
-      { property: "og:title", content: "Notes — Codolio" },
+      { property: "og:title", content: "Notes — Lendi" },
       {
         property: "og:description",
         content: "Question-linked notes and general revision notes in one place.",
@@ -27,17 +38,29 @@ export const Route = createFileRoute("/notes")({
 const tabs = ["Question Notes", "General Notes"] as const;
 
 type NoteItem = { id: string; title: string; body: string; updated: string; question?: string };
+const field =
+  "mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary";
 
 function NotesPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Question Notes");
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState<string | null>(notes[0]?.id ?? null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const { userNotes } = useAppState();
 
   // BACKEND PLACEHOLDER: fetch notes for the current user
   const list = useMemo<NoteItem[]>(() => {
-    const source: NoteItem[] = tab === "Question Notes" ? notes : generalNotes;
-    return source.filter((n) => n.title.toLowerCase().includes(query.trim().toLowerCase()));
-  }, [tab, query]);
+    const staticNotes: NoteItem[] = tab === "Question Notes" ? notes : generalNotes;
+    const kind: UserNote["kind"] = tab === "Question Notes" ? "question" : "general";
+    const savedNotes = userNotes.filter((note) => note.kind === kind);
+    const source = [...savedNotes, ...staticNotes];
+    const normalizedQuery = query.trim().toLowerCase();
+    return source.filter((n) =>
+      [n.title, n.body, n.question ?? ""].some((value) =>
+        value.toLowerCase().includes(normalizedQuery),
+      ),
+    );
+  }, [tab, query, userNotes]);
 
   const active = list.find((n) => n.id === activeId) ?? list[0] ?? null;
 
@@ -46,11 +69,14 @@ function NotesPage() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">My Notes</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Organize your learning and notes in one place</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Organize your learning and notes in one place
+          </p>
         </div>
         {/* BACKEND PLACEHOLDER: create note */}
         <button
           type="button"
+          onClick={() => setDialogOpen(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
           <Plus className="size-4" /> New note
@@ -84,25 +110,12 @@ function NotesPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={tab === "Question Notes" ? "Search a question note" : "Search a general note"}
+              placeholder={
+                tab === "Question Notes" ? "Search a question note" : "Search a general note"
+              }
               aria-label="Search notes"
               className="w-full rounded-lg border border-border bg-surface py-2 pl-3 pr-9 text-sm outline-none focus:border-primary"
             />
-          </div>
-          {/* BACKEND PLACEHOLDER: note filters */}
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
-          >
-            <Filter className="size-3.5" /> Filter
-          </button>
-          <div className="flex gap-1">
-            <button type="button" aria-label="Previous page" className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-accent">
-              <ChevronLeft className="size-3.5" />
-            </button>
-            <button type="button" aria-label="Next page" className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-accent">
-              <ChevronRight className="size-3.5" />
-            </button>
           </div>
         </div>
 
@@ -118,12 +131,16 @@ function NotesPage() {
                   }`}
                 >
                   <p className="truncate text-sm font-medium">{n.title}</p>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{n.question ?? n.updated}</p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {n.question ?? n.updated}
+                  </p>
                 </button>
               </li>
             ))}
             {list.length === 0 ? (
-              <li className="px-4 py-10 text-center text-sm text-muted-foreground">No notes found</li>
+              <li className="px-4 py-10 text-center text-sm text-muted-foreground">
+                No notes found
+              </li>
             ) : null}
           </ul>
 
@@ -131,7 +148,22 @@ function NotesPage() {
             {active ? (
               <>
                 <h2 className="text-lg font-semibold">{active.title}</h2>
-                {active.question ? <p className="mt-1 text-xs text-primary">{active.question}</p> : null}
+                {userNotes.some((note) => note.id === active.id) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deleteNote(active.id);
+                      setActiveId(null);
+                      toast.message("Note deleted");
+                    }}
+                    className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-destructive hover:underline"
+                  >
+                    <Trash2 className="size-3.5" /> Delete note
+                  </button>
+                ) : null}
+                {active.question ? (
+                  <p className="mt-1 text-xs text-primary">{active.question}</p>
+                ) : null}
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{active.body}</p>
                 <p className="mt-6 text-xs text-muted-foreground">Updated {active.updated}</p>
               </>
@@ -141,6 +173,73 @@ function NotesPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New note</DialogTitle>
+            <DialogDescription>
+              Save a quick revision note to your {tab.toLowerCase()} collection.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              const title = String(form.get("title") ?? "").trim();
+              const body = String(form.get("body") ?? "").trim();
+              const question = String(form.get("question") ?? "").trim();
+              if (!title || !body) return;
+              const kind: UserNote["kind"] = tab === "Question Notes" ? "question" : "general";
+              addNote({
+                title,
+                body,
+                kind,
+                ...(question ? { question } : {}),
+              });
+              setDialogOpen(false);
+              toast.success("Note created");
+            }}
+          >
+            <div>
+              <label className="text-sm font-medium" htmlFor="note-title">
+                Title
+              </label>
+              <input id="note-title" name="title" required className={field} />
+            </div>
+            {tab === "Question Notes" ? (
+              <div>
+                <label className="text-sm font-medium" htmlFor="note-question">
+                  Question or topic
+                </label>
+                <input id="note-question" name="question" className={field} />
+              </div>
+            ) : null}
+            <div>
+              <label className="text-sm font-medium" htmlFor="note-body">
+                Note
+              </label>
+              <textarea id="note-body" name="body" required rows={5} className={field} />
+            </div>
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setDialogOpen(false)}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                Create note
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

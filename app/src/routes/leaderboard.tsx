@@ -7,16 +7,17 @@ import { leaderboard, currentUser } from "@/lib/mock-data";
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
-      { title: "Global Coding Leaderboard — Codolio" },
+      { title: "Global Coding Leaderboard — Lendi" },
       {
         name: "description",
         content:
           "See where you rank globally with the balanced C Score built from DSA solving, contest ratings and development activity.",
       },
-      { property: "og:title", content: "Global Coding Leaderboard — Codolio" },
+      { property: "og:title", content: "Global Coding Leaderboard — Lendi" },
       {
         property: "og:description",
-        content: "Compare your C Score, questions solved and contest ratings with coders worldwide.",
+        content:
+          "Compare your C Score, questions solved and contest ratings with coders worldwide.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -32,7 +33,10 @@ function LeaderboardPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Leaderboard" subtitle="Ranked by C Score — a balanced measure out of 900." />
+      <PageHeader
+        title="Leaderboard"
+        subtitle="Ranked by C Score — a balanced measure out of 900."
+      />
 
       <div className="flex flex-wrap gap-2">
         {scopes.map((s) => (
@@ -53,7 +57,11 @@ function LeaderboardPage() {
 
       {/* Top 3 podium */}
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        {([leaderboard[1], leaderboard[0], leaderboard[2]].filter(Boolean) as (typeof leaderboard)[number][]).map((u) => (
+        {(
+          [leaderboard[1], leaderboard[0], leaderboard[2]].filter(
+            Boolean,
+          ) as (typeof leaderboard)[number][]
+        ).map((u) => (
           <article
             key={u.rank}
             className={`card-surface flex flex-col items-center p-5 text-center ${
@@ -96,7 +104,6 @@ function LeaderboardPage() {
         </button>
       </div>
 
-
       {/* BACKEND PLACEHOLDER: paginated leaderboard query by scope */}
       <div className="card-surface mt-5 hidden overflow-x-auto md:block">
         <table className="w-full min-w-[720px] text-sm">
@@ -113,13 +120,18 @@ function LeaderboardPage() {
           </thead>
           <tbody>
             {leaderboard.map((u) => (
-              <tr key={u.rank} className="border-b border-border/60 last:border-0 hover:bg-surface-hover">
+              <tr
+                key={u.rank}
+                className="border-b border-border/60 last:border-0 hover:bg-surface-hover"
+              >
                 <td className="px-4 py-3 font-semibold text-primary">#{u.rank}</td>
                 <td className="px-4 py-3">
                   <p className="font-medium">{u.name}</p>
                   <p className="text-xs text-muted-foreground">{u.handle}</p>
                 </td>
-                <td className="max-w-[240px] truncate px-4 py-3 text-muted-foreground">{u.institution}</td>
+                <td className="max-w-[240px] truncate px-4 py-3 text-muted-foreground">
+                  {u.institution}
+                </td>
                 <td className="px-4 py-3">{u.questions}</td>
                 <td className="px-4 py-3">{u.leetcode}</td>
                 <td className="px-4 py-3">{u.codeforces}</td>

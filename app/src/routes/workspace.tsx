@@ -9,7 +9,7 @@ import { setQuestionStatus, useAppState, type QuestionStatus } from "@/lib/app-s
 export const Route = createFileRoute("/workspace")({
   head: () => ({
     meta: [
-      { title: "My Workspace — Question Tracker | Codolio" },
+      { title: "My Workspace — Question Tracker | Lendi" },
       {
         name: "description",
         content:
@@ -74,7 +74,10 @@ function WorkspacePage() {
 
   return (
     <AppShell>
-      <PageHeader title="My Workspace" subtitle="Everything you have solved, attempted or saved for later." />
+      <PageHeader
+        title="My Workspace"
+        subtitle="Everything you have solved, attempted or saved for later."
+      />
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
@@ -134,11 +137,16 @@ function WorkspacePage() {
           </thead>
           <tbody>
             {rows.map((q) => (
-              <tr key={q.id} className="border-b border-border/60 last:border-0 hover:bg-surface-hover">
+              <tr
+                key={q.id}
+                className="border-b border-border/60 last:border-0 hover:bg-surface-hover"
+              >
                 <td className="px-4 py-3 font-medium">
                   <span className="flex items-center gap-2">
                     {q.title}
-                    {q.notes ? <NotebookPen className="size-3.5 text-primary" aria-label="Has notes" /> : null}
+                    {q.notes ? (
+                      <NotebookPen className="size-3.5 text-primary" aria-label="Has notes" />
+                    ) : null}
                     {/* BACKEND PLACEHOLDER: deep-link to the question on its platform */}
                     <button
                       type="button"
@@ -150,7 +158,9 @@ function WorkspacePage() {
                     </button>
                   </span>
                 </td>
-                <td className={`px-4 py-3 font-medium ${diffClass[q.difficulty]}`}>{q.difficulty}</td>
+                <td className={`px-4 py-3 font-medium ${diffClass[q.difficulty]}`}>
+                  {q.difficulty}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{q.platform}</td>
                 <td className="px-4 py-3 text-muted-foreground">{q.topics.join(", ")}</td>
                 <td className="px-4 py-3">
@@ -201,7 +211,9 @@ function WorkspacePage() {
         ))}
       </ul>
 
-      {rows.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">No questions found.</p> : null}
+      {rows.length === 0 ? (
+        <p className="mt-5 text-sm text-muted-foreground">No questions found.</p>
+      ) : null}
     </AppShell>
   );
 }

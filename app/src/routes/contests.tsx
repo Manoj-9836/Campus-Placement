@@ -1,8 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Bell, BellRing, CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock, Trash2 } from "lucide-react";
+import {
+  Bell,
+  BellRing,
+  CalendarDays,
+  CalendarPlus,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
-import { AppShell, PageHeader } from "@/components/layout/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { contests } from "@/lib/mock-data";
 import { addEvent, deleteEvent, toggleReminder, useAppState } from "@/lib/app-store";
 import {
@@ -13,20 +25,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/contests")({
   head: () => ({
     meta: [
-      { title: "Contest Calendar — Codolio" },
+      { title: "Contest Calendar — Lendi" },
       {
         name: "description",
         content:
-          "Upcoming coding contests across LeetCode, CodeChef, Codeforces, AtCoder and Unstop with reminders and your own custom events in one calendar.",
+          "Explore coding contests across LeetCode, CodeChef, Codeforces, AtCoder and Unstop.",
       },
-      { property: "og:title", content: "Contest Calendar — Codolio" },
+      { property: "og:title", content: "Contest Calendar — Lendi" },
       {
         property: "og:description",
-        content: "Never miss a coding contest — one calendar for every platform, plus your own events.",
+        content: "One calendar for every coding contest, with reminders and custom events.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -38,27 +51,38 @@ export const Route = createFileRoute("/contests")({
 const platforms = ["All", "My Events", "LeetCode", "CodeChef", "Codeforces", "AtCoder", "Unstop"];
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const monthNames = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-const accentDot: Record<string, string> = {
+const accentClasses: Record<string, string> = {
+  success: "border-success/60 bg-success/10 text-success",
+  destructive: "border-destructive/60 bg-destructive/10 text-destructive",
+  info: "border-info/60 bg-info/10 text-info",
+  warning: "border-warning/60 bg-warning/10 text-warning",
+  primary: "border-primary/60 bg-primary/10 text-primary",
+};
+
+const accentDots: Record<string, string> = {
   success: "bg-success",
   destructive: "bg-destructive",
   info: "bg-info",
   warning: "bg-warning",
   primary: "bg-primary",
 };
-const accentChip: Record<string, string> = {
-  success: "bg-success/15 text-success",
-  destructive: "bg-destructive/15 text-destructive",
-  info: "bg-info/15 text-info",
-  warning: "bg-warning/15 text-warning",
-  primary: "bg-primary/15 text-primary",
-};
 
-const toKey = (y: number, m: number, d: number) =>
-  `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+const toKey = (year: number, month: number, day: number) =>
+  String(year) + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
 
 type CalendarItem = {
   id: string;
@@ -69,6 +93,7 @@ type CalendarItem = {
   day: string;
   date: string;
   accent: string;
+  subscribers?: number;
   custom?: boolean;
   note?: string;
 };
@@ -76,45 +101,114 @@ type CalendarItem = {
 const field =
   "mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary";
 
+function formatDate(date: string) {
+  return new Date(date + "T00:00:00").toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
+}
+
+function EventCard({
+  item,
+  reminded,
+  onRemind,
+  onDelete,
+}: {
+  item: CalendarItem;
+  reminded: boolean;
+  onRemind: () => void;
+  onDelete?: (() => void) | undefined;
+}) {
+  return (
+    <article className="rounded-xl border border-border bg-card/70 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-medium text-muted-foreground">
+          {item.start}
+          {!item.custom && item.end ? " – " + item.end : ""}
+        </p>
+        {onDelete ? (
+          <button
+            type="button"
+            aria-label={"Delete " + item.name}
+            onClick={onDelete}
+            className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        ) : null}
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <span
+          className={cn("grid size-7 place-items-center rounded-md", accentClasses[item.accent])}
+        >
+          <CalendarDays className="size-3.5" />
+        </span>
+        <h3 className="min-w-0 truncate text-sm font-semibold">{item.name}</h3>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span className="flex min-w-0 items-center gap-1.5 truncate">
+          <Users className="size-3.5 shrink-0" />
+          {item.subscribers ? item.subscribers + " users subscribed" : item.platform}
+        </span>
+        <button
+          type="button"
+          onClick={onRemind}
+          className="shrink-0 font-medium text-primary hover:underline"
+        >
+          {reminded ? "Subscribed" : "Subscribe"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function ContestsPage() {
   const [platform, setPlatform] = useState("All");
-  // BACKEND PLACEHOLDER: fetch contests for the visible month from the aggregator API
-  const [cursor, setCursor] = useState({ year: 2026, month: 7 }); // Aug 2026
-  const [selected, setSelected] = useState<string | null>("2026-08-29");
+  const [query, setQuery] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [cursor, setCursor] = useState({ year: 2026, month: 8 });
+  const [selected, setSelected] = useState("2026-09-05");
   const [dialogOpen, setDialogOpen] = useState(false);
-
   const { events, reminders } = useAppState();
 
   const all = useMemo<CalendarItem[]>(
     () => [
       ...contests,
-      ...events.map((e) => ({
-        id: e.id,
-        name: e.title,
+      ...events.map((event) => ({
+        id: event.id,
+        name: event.title,
         platform: "My Events",
-        start: e.start,
-        end: e.start,
-        day: e.date,
-        date: e.date,
+        start: event.start,
+        end: "",
+        day: formatDate(event.date),
+        date: event.date,
         accent: "primary",
         custom: true,
-        note: e.note,
+        note: event.note,
       })),
     ],
     [events],
   );
 
-  const list = useMemo(
-    () => (platform === "All" ? all : all.filter((c) => c.platform === platform)),
-    [platform, all],
-  );
+  const list = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return all.filter((item) => {
+      const matchesPlatform = platform === "All" || item.platform === platform;
+      const matchesQuery =
+        !normalizedQuery ||
+        item.name.toLowerCase().includes(normalizedQuery) ||
+        item.platform.toLowerCase().includes(normalizedQuery);
+      return matchesPlatform && matchesQuery;
+    });
+  }, [all, platform, query]);
 
   const byDate = useMemo(() => {
     const map = new Map<string, CalendarItem[]>();
-    for (const c of list) {
-      const arr = map.get(c.date) ?? [];
-      arr.push(c);
-      map.set(c.date, arr);
+    for (const item of list) {
+      const items = map.get(item.date) ?? [];
+      items.push(item);
+      map.set(item.date, items);
     }
     return map;
   }, [list]);
@@ -122,288 +216,331 @@ function ContestsPage() {
   const { year, month } = cursor;
   const firstWeekday = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells = [
+  const cells: Array<number | null> = [
     ...Array.from({ length: firstWeekday }, () => null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
   const shift = (delta: number) => {
-    const d = new Date(year, month + delta, 1);
-    setCursor({ year: d.getFullYear(), month: d.getMonth() });
+    const date = new Date(year, month + delta, 1);
+    setCursor({ year: date.getFullYear(), month: date.getMonth() });
   };
 
-  const monthCount = list.filter((c) => c.date.startsWith(toKey(year, month, 1).slice(0, 7))).length;
-  const selectedContests = selected ? (byDate.get(selected) ?? []) : [];
-
+  const monthPrefix = String(year) + "-" + String(month + 1).padStart(2, "0");
+  const monthCount = list.filter((item) => item.date.startsWith(monthPrefix)).length;
+  const selectedItems = byDate.get(selected) ?? [];
   const upcoming = useMemo(
-    () => [...list].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6),
+    () => [...list].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 7),
     [list],
   );
+  const todayItems = upcoming.slice(0, 1);
+  const upcomingGroups = upcoming.slice(1).reduce<Map<string, CalendarItem[]>>((groups, item) => {
+    const group = groups.get(item.date) ?? [];
+    group.push(item);
+    groups.set(item.date, group);
+    return groups;
+  }, new Map());
 
-  const handleRemind = (item: CalendarItem) => {
-    // BACKEND PLACEHOLDER: subscribe to contest reminders
+  const handleReminder = (item: CalendarItem) => {
+    const enabled = reminders.includes(item.id);
     toggleReminder(item.id);
-    toast[reminders.includes(item.id) ? "message" : "success"](
-      reminders.includes(item.id) ? `Reminder removed for ${item.name}` : `We'll remind you before ${item.name}`,
+    toast[enabled ? "message" : "success"](
+      enabled ? "Subscription removed for " + item.name : "Subscribed to " + item.name,
     );
   };
 
-  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
+  const handleCreate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
     const date = String(form.get("date") ?? "");
     const start = String(form.get("start") ?? "");
     if (!title || !date) return;
-    // BACKEND PLACEHOLDER: persist the custom calendar event
     addEvent({
       title,
       date,
       start: start || "All day",
       note: String(form.get("note") ?? "").trim(),
     });
-    const d = new Date(`${date}T00:00:00`);
-    setCursor({ year: d.getFullYear(), month: d.getMonth() });
+    const createdDate = new Date(date + "T00:00:00");
+    setCursor({ year: createdDate.getFullYear(), month: createdDate.getMonth() });
     setSelected(date);
     setDialogOpen(false);
-    toast.success(`"${title}" added to your calendar`);
+    toast.success(title + " added to your calendar");
   };
 
   return (
-    <AppShell>
-      <PageHeader
-        title="Contests"
-        subtitle="Every upcoming contest, one calendar, one reminder system."
-        action={
-          <button
-            type="button"
-            onClick={() => setDialogOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            <CalendarPlus className="size-4" /> Add event
-          </button>
-        }
-      />
-
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        {platforms.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => setPlatform(p)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-              platform === p
-                ? "border-primary bg-primary/15 text-primary"
-                : "border-border text-muted-foreground hover:bg-accent"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
-        {/* Calendar */}
-        <section className="card-surface p-3 sm:p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+    <AppShell hideHeader fullWidth wideSidebar>
+      <div className="min-h-screen bg-background">
+        <div className="grid min-h-screen xl:grid-cols-[31rem_minmax(0,1fr)]">
+          <section className="border-b border-border px-5 py-7 sm:px-8 xl:border-b-0 xl:border-r">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                  Event tracker
+                </p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                  Contest Calendar
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Explore coding contests and never miss it.
+                </p>
+              </div>
               <button
                 type="button"
-                aria-label="Previous month"
-                onClick={() => shift(-1)}
-                className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label="Add custom event"
+                onClick={() => setDialogOpen(true)}
+                className="mt-1 rounded-lg border border-border p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
               >
-                <ChevronLeft className="size-4" />
-              </button>
-              <p className="min-w-[9.5rem] text-center text-sm font-semibold sm:text-base">
-                {monthNames[month]} {year}
-              </p>
-              <button
-                type="button"
-                aria-label="Next month"
-                onClick={() => shift(1)}
-                className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                <ChevronRight className="size-4" />
+                <CalendarPlus className="size-4" />
               </button>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="hidden text-xs text-muted-foreground sm:inline">{monthCount} events</span>
+
+            <div className="mt-8 flex gap-3">
+              <label className="relative min-w-0 flex-1">
+                <span className="sr-only">Search contest</span>
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search contest"
+                  className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
+                />
+              </label>
               <button
                 type="button"
-                onClick={() => setCursor({ year: 2026, month: 7 })}
-                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setFiltersOpen((open) => !open)}
+                className={cn(
+                  "inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium",
+                  filtersOpen
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
               >
-                Today
+                <SlidersHorizontal className="size-4" /> Filters
               </button>
             </div>
-          </div>
 
-          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {weekDays.map((d) => (
-              <span key={d} className="py-1">
-                <span className="sm:hidden">{d[0]}</span>
-                <span className="hidden sm:inline">{d}</span>
-              </span>
-            ))}
-          </div>
+            {filtersOpen ? (
+              <div className="mt-3 flex flex-wrap gap-2 border-b border-border pb-4">
+                {platforms.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => setPlatform(name)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium",
+                      platform === name
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:bg-accent",
+                    )}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
-          <div className="mt-1 grid grid-cols-7 gap-1">
-            {cells.map((day, i) => {
-              if (day === null) return <div key={`e-${i}`} className="min-h-14 rounded-lg sm:min-h-24" />;
-              const key = toKey(year, month, day);
-              const dayContests = byDate.get(key) ?? [];
-              const isSelected = selected === key;
-              return (
+            <div className="mt-8 space-y-8">
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Today</h2>
+                  <span className="text-xs text-muted-foreground">{todayItems.length} event</span>
+                </div>
+                <div className="space-y-3">
+                  {todayItems.length ? (
+                    todayItems.map((item) => (
+                      <EventCard
+                        key={item.id}
+                        item={item}
+                        reminded={reminders.includes(item.id)}
+                        onRemind={() => handleReminder(item)}
+                        onDelete={
+                          item.custom
+                            ? () => {
+                                deleteEvent(item.id);
+                                toast.message(item.name + " removed");
+                              }
+                            : undefined
+                        }
+                      />
+                    ))
+                  ) : (
+                    <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+                      No contests match your search.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h2 className="mb-4 text-lg font-semibold">Upcoming</h2>
+                <div className="space-y-6">
+                  {[...upcomingGroups.entries()].map(([date, items]) => (
+                    <div key={date}>
+                      <p className="mb-3 text-sm font-semibold">{formatDate(date)}</p>
+                      <div className="space-y-3">
+                        {items.map((item) => (
+                          <EventCard
+                            key={item.id}
+                            item={item}
+                            reminded={reminders.includes(item.id)}
+                            onRemind={() => handleReminder(item)}
+                            onDelete={
+                              item.custom
+                                ? () => {
+                                    deleteEvent(item.id);
+                                    toast.message(item.name + " removed");
+                                  }
+                                : undefined
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="min-w-0 px-4 py-5 sm:px-7 sm:py-7">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold sm:text-3xl">
+                  {monthNames[month]} {year}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {monthCount} contests this month
+                </p>
+              </div>
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
                 <button
-                  key={key}
                   type="button"
-                  onClick={() => setSelected(key)}
-                  onDoubleClick={() => {
-                    setSelected(key);
-                    setDialogOpen(true);
-                  }}
-                  className={`flex min-h-14 flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors sm:min-h-24 sm:p-2 ${
-                    isSelected
-                      ? "border-primary bg-primary/10"
-                      : "border-border/60 bg-background/40 hover:border-primary/40 hover:bg-accent"
-                  }`}
+                  onClick={() => setCursor({ year: 2026, month: 8 })}
+                  className="rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
-                  <span
-                    className={`text-xs font-semibold ${
-                      dayContests.length ? "text-foreground" : "text-muted-foreground"
-                    }`}
+                  Today
+                </button>
+                <button
+                  type="button"
+                  aria-label="Previous month"
+                  onClick={() => shift(-1)}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next month"
+                  onClick={() => shift(1)}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+                <span className="ml-1 hidden rounded-md bg-primary/10 px-3 py-2 text-xs font-semibold text-primary sm:block">
+                  Month
+                </span>
+                <span className="hidden px-2 text-xs text-muted-foreground sm:block">Week</span>
+                <span className="hidden px-2 text-xs text-muted-foreground sm:block">Day</span>
+              </div>
+            </div>
+
+            <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card/40">
+              <div className="grid grid-cols-7 border-b border-border">
+                {weekDays.map((day) => (
+                  <div
+                    key={day}
+                    className="border-r border-border px-2 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0 sm:text-xs"
                   >
                     {day}
-                  </span>
-                  <span className="flex flex-wrap gap-1 sm:hidden">
-                    {dayContests.slice(0, 3).map((c) => (
-                      <span key={c.id} className={`size-1.5 rounded-full ${accentDot[c.accent] ?? "bg-primary"}`} />
-                    ))}
-                  </span>
-                  <span className="hidden flex-col gap-1 sm:flex">
-                    {dayContests.slice(0, 2).map((c) => (
-                      <span
-                        key={c.id}
-                        className={`truncate rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                          accentChip[c.accent] ?? "bg-primary/15 text-primary"
-                        }`}
-                      >
-                        {c.name}
-                      </span>
-                    ))}
-                    {dayContests.length > 2 ? (
-                      <span className="px-1 text-[10px] text-muted-foreground">+{dayContests.length - 2} more</span>
-                    ) : null}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {cells.map((day, index) => {
+                  if (day === null) {
+                    return (
+                      <div
+                        key={"empty-" + index}
+                        className="min-h-28 border-b border-r border-border bg-background/30 sm:min-h-36"
+                      />
+                    );
+                  }
 
-        {/* Day detail + upcoming rail */}
-        <aside className="space-y-4">
-          <div className="card-surface p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold">
-                {selected
-                  ? new Date(`${selected}T00:00:00`).toLocaleDateString("en-GB", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "short",
-                    })
-                  : "Select a day"}
-              </p>
-              <button
-                type="button"
-                onClick={() => setDialogOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-primary px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
-              >
-                <CalendarPlus className="size-3.5" /> Add
-              </button>
-            </div>
-            <ul className="mt-3 space-y-3">
-              {selectedContests.length === 0 ? (
-                <li className="text-sm text-muted-foreground">Nothing on this day yet — add your own event.</li>
-              ) : (
-                selectedContests.map((c) => {
-                  const reminded = reminders.includes(c.id);
+                  const key = toKey(year, month, day);
+                  const dayItems = byDate.get(key) ?? [];
+                  const isSelected = selected === key;
                   return (
-                    <li key={c.id} className="rounded-lg border border-border p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/15 text-primary">
-                          <CalendarDays className="size-4" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{c.name}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{c.platform}</p>
-                        </div>
-                        {c.custom ? (
-                          <button
-                            type="button"
-                            aria-label={`Delete ${c.name}`}
-                            onClick={() => {
-                              deleteEvent(c.id);
-                              toast.message(`"${c.name}" removed`);
-                            }}
-                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
-                        ) : null}
-                      </div>
-                      <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="size-3.5" />
-                        {c.custom ? c.start : `${c.start} – ${c.end}`}
-                      </p>
-                      {c.note ? <p className="mt-2 text-xs text-muted-foreground">{c.note}</p> : null}
-                      <button
-                        type="button"
-                        onClick={() => handleRemind(c)}
-                        className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          reminded
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-primary text-primary hover:bg-primary/10"
-                        }`}
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelected(key)}
+                      className={cn(
+                        "group min-h-28 min-w-0 border-b border-r border-border p-2 text-left align-top transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-36 sm:p-3",
+                        isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/70",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "text-xs font-semibold",
+                          isSelected ? "text-primary" : "text-muted-foreground",
+                        )}
                       >
-                        {reminded ? <BellRing className="size-3.5" /> : <Bell className="size-3.5" />}
-                        {reminded ? "Reminder on" : "Remind me"}
-                      </button>
-                    </li>
+                        {day}
+                      </span>
+                      <span className="mt-2 flex flex-col gap-1">
+                        {dayItems.slice(0, 3).map((item) => (
+                          <span
+                            key={item.id}
+                            className={cn(
+                              "block truncate rounded-md border px-1.5 py-1 text-[10px] font-semibold sm:text-[11px]",
+                              accentClasses[item.accent] ?? accentClasses["primary"],
+                            )}
+                            title={item.name}
+                          >
+                            <span className="hidden sm:inline">{item.name}</span>
+                            <span className="sm:hidden">{item.name.slice(0, 8)}</span>
+                          </span>
+                        ))}
+                        {dayItems.length > 3 ? (
+                          <span className="px-1 text-[10px] text-muted-foreground">
+                            +{dayItems.length - 3} more
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
                   );
-                })
-              )}
-            </ul>
-          </div>
+                })}
+              </div>
+            </div>
 
-          <div className="card-surface p-4">
-            <p className="text-sm font-semibold">Upcoming</p>
-            <ul className="mt-3 space-y-3">
-              {upcoming.map((c) => (
-                <li key={c.id} className="flex items-start gap-2">
-                  <span className={`mt-1.5 size-2 shrink-0 rounded-full ${accentDot[c.accent] ?? "bg-primary"}`} />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const d = new Date(`${c.date}T00:00:00`);
-                      setCursor({ year: d.getFullYear(), month: d.getMonth() });
-                      setSelected(c.date);
-                    }}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <p className="truncate text-sm font-medium">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {c.platform} · {c.day} · {c.start}
+            <div className="mt-5 rounded-xl border border-border bg-card/40 p-4 sm:hidden">
+              <p className="text-sm font-semibold">{formatDate(selected)}</p>
+              <div className="mt-3 space-y-2">
+                {selectedItems.length ? (
+                  selectedItems.map((item) => (
+                    <p
+                      key={item.id}
+                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <span
+                        className={cn(
+                          "size-2 rounded-full",
+                          accentDots[item.accent] ?? "bg-primary",
+                        )}
+                      />
+                      {item.name}
                     </p>
-                  </button>
-                  {reminders.includes(c.id) ? <BellRing className="mt-1 size-3.5 shrink-0 text-primary" /> : null}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">No contests selected.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -411,7 +548,7 @@ function ContestsPage() {
           <DialogHeader>
             <DialogTitle>Add a custom event</DialogTitle>
             <DialogDescription>
-              Mock interviews, revision blocks, application deadlines — anything you want on your calendar.
+              Add interviews, revision blocks or application deadlines to your calendar.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
@@ -419,7 +556,7 @@ function ContestsPage() {
               <label className="text-sm font-medium" htmlFor="ev-title">
                 Event title
               </label>
-              <input id="ev-title" name="title" required placeholder="Mock interview with Arjun" className={field} />
+              <input id="ev-title" name="title" required className={field} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -431,7 +568,7 @@ function ContestsPage() {
                   name="date"
                   type="date"
                   required
-                  defaultValue={selected ?? toKey(year, month, 1)}
+                  defaultValue={selected}
                   className={field}
                 />
               </div>
@@ -446,19 +583,19 @@ function ContestsPage() {
               <label className="text-sm font-medium" htmlFor="ev-note">
                 Note
               </label>
-              <textarea id="ev-note" name="note" rows={3} placeholder="Optional details" className={field} />
+              <textarea id="ev-note" name="note" rows={3} className={field} />
             </div>
             <DialogFooter>
               <button
                 type="button"
                 onClick={() => setDialogOpen(false)}
-                className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
               >
                 Add event
               </button>

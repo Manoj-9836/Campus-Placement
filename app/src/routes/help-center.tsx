@@ -7,15 +7,16 @@ import { faqs } from "@/lib/mock-data";
 export const Route = createFileRoute("/help-center")({
   head: () => ({
     meta: [
-      { title: "Help Center — Codolio" },
+      { title: "Help Center — Lendi" },
       {
         name: "description",
-        content: "Answers about C Score, connecting coding platforms, profile visibility and how stats refresh.",
+        content:
+          "Answers about C Score, connecting coding platforms, profile visibility and how stats refresh.",
       },
-      { property: "og:title", content: "Help Center — Codolio" },
+      { property: "og:title", content: "Help Center — Lendi" },
       {
         property: "og:description",
-        content: "Frequently asked questions about tracking your coding journey on Codolio.",
+        content: "Frequently asked questions about tracking your coding journey on Lendi.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -29,7 +30,10 @@ function HelpCenterPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Help Center" subtitle="Quick answers to the questions we get most often." />
+      <PageHeader
+        title="Help Center"
+        subtitle="Quick answers to the questions we get most often."
+      />
 
       <div className="card-surface flex items-center gap-4 p-5">
         <span className="grid size-11 place-items-center rounded-lg bg-primary/15 text-primary">

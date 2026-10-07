@@ -1,22 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Link2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
-import { currentUser, platformStats, developmentStats } from "@/lib/mock-data";
+import { platformStats, developmentStats } from "@/lib/mock-data";
+import {
+  saveProfile,
+  setVisibility as saveVisibility,
+  togglePlatform,
+  useAppState,
+  type AppState,
+} from "@/lib/app-store";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Edit Profile & Settings — Codolio" },
+      { title: "Edit Profile & Settings — Lendi" },
       {
         name: "description",
         content:
           "Update your basic info, profile details, connected coding platforms, profile visibility and account settings.",
       },
-      { property: "og:title", content: "Edit Profile & Settings — Codolio" },
+      { property: "og:title", content: "Edit Profile & Settings — Lendi" },
       {
         property: "og:description",
-        content: "Manage your Codolio profile, platform handles and visibility.",
+        content: "Manage your Lendi profile, platform handles and visibility.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -32,11 +40,37 @@ const field =
 
 function SettingsPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Basic Info");
-  const [visibility, setVisibility] = useState(currentUser.visibility);
+  const { profile, visibility, connected } = useAppState();
+  const [draft, setDraft] = useState<AppState["profile"]>(profile);
+  const [draftVisibility, setDraftVisibility] = useState(visibility);
+
+  useEffect(() => {
+    setDraft(profile);
+    setDraftVisibility(visibility);
+  }, [profile, visibility]);
+
+  const updateDraft = (fieldName: keyof AppState["profile"], value: string) => {
+    setDraft((current) => ({ ...current, [fieldName]: value }));
+  };
+
+  const handleSave = () => {
+    saveProfile(draft);
+    saveVisibility(draftVisibility);
+    toast.success("Settings saved");
+  };
+
+  const handleCancel = () => {
+    setDraft(profile);
+    setDraftVisibility(visibility);
+    toast.message("Changes discarded");
+  };
 
   return (
     <AppShell>
-      <PageHeader title="Edit Profile" subtitle="Your details, handles and privacy — all in one place." />
+      <PageHeader
+        title="Edit Profile"
+        subtitle="Your details, handles and privacy — all in one place."
+      />
 
       <div className="flex flex-wrap gap-2">
         {tabs.map((t) => (
@@ -63,38 +97,71 @@ function SettingsPage() {
               <label className="text-sm font-medium" htmlFor="name">
                 Full name
               </label>
-              <input id="name" defaultValue={currentUser.name} className={field} />
+              <input
+                id="name"
+                value={draft.name}
+                onChange={(e) => updateDraft("name", e.target.value)}
+                className={field}
+              />
             </div>
             <div>
               <label className="text-sm font-medium" htmlFor="username">
                 Username
               </label>
-              <input id="username" defaultValue={currentUser.handle} className={field} />
+              <input
+                id="username"
+                value={draft.handle}
+                onChange={(e) => updateDraft("handle", e.target.value)}
+                className={field}
+              />
             </div>
             <div>
               <label className="text-sm font-medium" htmlFor="location">
                 Location
               </label>
-              <input id="location" defaultValue={currentUser.location} className={field} />
+              <input
+                id="location"
+                value={draft.location}
+                onChange={(e) => updateDraft("location", e.target.value)}
+                className={field}
+              />
             </div>
             <div>
               <label className="text-sm font-medium" htmlFor="institution">
                 Institution
               </label>
-              <input id="institution" defaultValue={currentUser.institution} className={field} />
+              <input
+                id="institution"
+                value={draft.institution}
+                onChange={(e) => updateDraft("institution", e.target.value)}
+                className={field}
+              />
             </div>
             <div className="sm:col-span-2">
               <label className="text-sm font-medium" htmlFor="about">
                 About
               </label>
-              <textarea id="about" rows={4} defaultValue={currentUser.about} className={field} />
+              <textarea
+                id="about"
+                rows={4}
+                value={draft.about}
+                onChange={(e) => updateDraft("about", e.target.value)}
+                className={field}
+              />
             </div>
           </div>
         ) : null}
 
         {tab === "Profile Details" ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            {["Portfolio website", "LinkedIn", "GitHub", "Twitter / X", "Resume link", "Preferred role"].map((l) => (
+            {[
+              "Portfolio website",
+              "LinkedIn",
+              "GitHub",
+              "Twitter / X",
+              "Resume link",
+              "Preferred role",
+            ].map((l) => (
               <div key={l}>
                 <label className="text-sm font-medium" htmlFor={l}>
                   {l}
@@ -120,13 +187,21 @@ function SettingsPage() {
                   <p className="text-xs text-muted-foreground">{p.handle || "Not connected"}</p>
                 </div>
                 {/* BACKEND PLACEHOLDER: connect / disconnect platform account */}
-                {p.connected ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+                {connected.includes(p.name) ? (
+                  <button
+                    type="button"
+                    onClick={() => togglePlatform(p.name)}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-success hover:underline"
+                  >
                     <Check className="size-3.5" /> Connected
-                  </span>
+                  </button>
                 ) : (
                   <button
                     type="button"
+                    onClick={() => {
+                      togglePlatform(p.name);
+                      toast.success(p.name + " connected");
+                    }}
                     className="rounded-lg border border-primary px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                   >
                     Connect
@@ -143,14 +218,16 @@ function SettingsPage() {
               <button
                 key={v}
                 type="button"
-                onClick={() => setVisibility(v)}
+                onClick={() => setDraftVisibility(v)}
                 className={`flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
-                  visibility === v ? "border-primary bg-primary/10" : "border-border hover:bg-accent"
+                  draftVisibility === v
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:bg-accent"
                 }`}
               >
                 <span
                   className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border ${
-                    visibility === v ? "border-primary bg-primary" : "border-border"
+                    draftVisibility === v ? "border-primary bg-primary" : "border-border"
                   }`}
                 />
                 <span>
@@ -194,12 +271,14 @@ function SettingsPage() {
           {/* BACKEND PLACEHOLDER: save settings mutation */}
           <button
             type="button"
+            onClick={handleSave}
             className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
             Save changes
           </button>
           <button
             type="button"
+            onClick={handleCancel}
             className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
           >
             Cancel

@@ -1,0 +1,72 @@
+Eligibility:
+  type: object
+  required: [minimumCgpa]
+  properties:
+    minimumCgpa: { type: number, minimum: 0, maximum: 10 }
+    allowedBranches: { type: array, items: { type: string } }
+    graduationYears: { type: array, items: { type: integer } }
+    backlogsAllowed: { type: boolean }
+    requiredSkills: { type: array, items: { type: string } }
+JobDescription:
+  type: object
+  required: [summary, responsibilities, requiredSkills]
+  properties:
+    summary: { type: string }
+    responsibilities: { type: array, items: { type: string } }
+    requiredSkills: { type: array, items: { type: string } }
+    preferredSkills: { type: array, items: { type: string } }
+DriveRequest:
+  type: object
+  required: [companyName, roleTitle, applicationDeadline, eligibility, jobDescription]
+  properties:
+    companyName: { type: string, maxLength: 150 }
+    companyLogoUrl: { type: string, format: uri }
+    roleTitle: { type: string, maxLength: 150 }
+    employmentType: { type: string, enum: [full_time, internship, internship_to_full_time] }
+    locations: { type: array, items: { type: string } }
+    applicationDeadline: { type: string, format: date-time }
+    driveDate: { type: [string, 'null'], format: date-time }
+    eligibility: { $ref: '#/Eligibility' }
+    jobDescription: { $ref: '#/JobDescription' }
+    selectionProcess: { type: array, items: { type: string } }
+    packageDetails: { type: object, additionalProperties: true }
+    contactEmail: { type: string, format: email }
+PlacementDrive:
+  allOf:
+    - $ref: '#/DriveRequest'
+    - type: object
+      required: [id, status, createdBy, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [draft, published, closed, archived] }
+        createdBy: { type: string }
+        documents: { type: array, items: { $ref: '#/DriveDocument' } }
+        applicationsCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+DriveDocument:
+  type: object
+  properties:
+    id: { type: string }
+    type: { type: string, enum: [job_description, eligibility, brochure, other] }
+    fileName: { type: string }
+    url: { type: string, format: uri }
+    uploadedAt: { type: string, format: date-time }
+ApplicationRequest:
+  type: object
+  required: [resumeUrl, consent]
+  properties:
+    resumeUrl: { type: string, format: uri }
+    coverNote: { type: string }
+    consent: { type: boolean, const: true }
+DriveApplication:
+  allOf:
+    - $ref: '#/ApplicationRequest'
+    - type: object
+      required: [id, driveId, studentId, status, appliedAt]
+      properties:
+        id: { type: string }
+        driveId: { type: string }
+        studentId: { type: string }
+        status: { type: string, enum: [submitted, under_review, shortlisted, rejected, selected, withdrawn] }
+        appliedAt: { type: string, format: date-time }

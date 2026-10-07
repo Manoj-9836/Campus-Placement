@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Codolio-style design system (dark-first).
+ * Lendi design system (dark-first).
  * Accent: orange. Surfaces: near-black neutrals.
  * All colors are oklch semantic tokens. Never hardcode colors in components.
  */
