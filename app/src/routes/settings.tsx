@@ -124,33 +124,12 @@ function SettingsPage() {
       if (currentUserClerkId && currentUserClerkId !== user.id) {
         // User switched, clear all data
         const emptyProfile: AppState["profile"] = {
-          avatar: "",
-          name: "",
-          handle: "",
-          location: "",
-          institution: "",
-          about: "",
-          email: "",
-          phone: "",
-          department: "",
-          degree: "",
-          currentYear: "",
-          currentSemester: "",
-          graduationYear: "",
-          gender: "",
-          country: "",
-          cgpa: "",
-          programmingLanguages: [],
-          technicalSkills: [],
-          targetRoles: [],
-          jobSeeking: "",
-          resumeUrl: "",
-          portfolioUrl: "",
-          githubUrl: "",
-          linkedinUrl: "",
-          projects: [],
-          rollNumber: "",
-          visibilityConfigured: false,
+          avatar: "", name: "", handle: "", location: "", institution: "", about: "", email: "", phone: "",
+          department: "", degree: "", currentYear: "", currentSemester: "", graduationYear: "", gender: "",
+          country: "", cgpa: "", tenth: "", twelfth: "", backlogs: "", gap: "", preferredLanguage: "",
+          dsaProficiency: "", preferredDomains: "", preferredLocations: "", workMode: "", rollNumber: "",
+          programmingLanguages: [], technicalSkills: [], targetRoles: [], jobSeeking: "", resumeUrl: "",
+          portfolioUrl: "", githubUrl: "", linkedinUrl: "", projects: [], visibilityConfigured: false,
         };
         setDraft(emptyProfile);
         setDraftVisibility("public");
@@ -180,6 +159,15 @@ function SettingsPage() {
           country: remoteProfile.country || "",
           about: remoteProfile.about || "",
           cgpa: remoteProfile.cgpa || "",
+          tenth: "",
+          twelfth: "",
+          backlogs: "",
+          gap: "",
+          preferredLanguage: "",
+          dsaProficiency: "",
+          preferredDomains: "",
+          preferredLocations: "",
+          workMode: "",
           programmingLanguages: remoteProfile.programmingLanguages || [],
           technicalSkills: remoteProfile.technicalSkills || [],
           targetRoles: remoteProfile.targetRoles || [],
@@ -213,33 +201,12 @@ function SettingsPage() {
   useEffect(() => {
     if (user === null && currentUserClerkId !== null) {
       const emptyProfile: AppState["profile"] = {
-        avatar: "",
-        name: "",
-        handle: "",
-        location: "",
-        institution: "",
-        about: "",
-        email: "",
-        phone: "",
-        department: "",
-        degree: "",
-        currentYear: "",
-        currentSemester: "",
-        graduationYear: "",
-        gender: "",
-        country: "",
-        cgpa: "",
-        programmingLanguages: [],
-        technicalSkills: [],
-        targetRoles: [],
-        jobSeeking: "",
-        resumeUrl: "",
-        portfolioUrl: "",
-        githubUrl: "",
-        linkedinUrl: "",
-        projects: [],
-        rollNumber: "",
-        visibilityConfigured: false,
+        avatar: "", name: "", handle: "", location: "", institution: "", about: "", email: "", phone: "",
+        department: "", degree: "", currentYear: "", currentSemester: "", graduationYear: "", gender: "",
+        country: "", cgpa: "", tenth: "", twelfth: "", backlogs: "", gap: "", preferredLanguage: "",
+        dsaProficiency: "", preferredDomains: "", preferredLocations: "", workMode: "", rollNumber: "",
+        programmingLanguages: [], technicalSkills: [], targetRoles: [], jobSeeking: "", resumeUrl: "",
+        portfolioUrl: "", githubUrl: "", linkedinUrl: "", projects: [], visibilityConfigured: false,
       };
       setDraft(emptyProfile);
       setDraftVisibility("public");
@@ -793,8 +760,9 @@ function AcademicForm({ draft, update }: FormProps) {
           min="0"
           max="10"
           step="0.01"
+          placeholder="9.2"
           className={inputClass}
-          value={draft.cgpa}
+          value={draft.cgpa || ""}
           onChange={(e) => update("cgpa", e.target.value)}
         />
       </Field>
@@ -802,16 +770,42 @@ function AcademicForm({ draft, update }: FormProps) {
         <input id="scale" className={inputClass} defaultValue="10" disabled />
       </Field>
       <Field label="10th percentage / CGPA" id="tenth" optional>
-        <input id="tenth" className={inputClass} />
+        <input
+          id="tenth"
+          placeholder="92%"
+          className={inputClass}
+          value={draft.tenth || ""}
+          onChange={(e) => update("tenth", e.target.value)}
+        />
       </Field>
       <Field label="12th / Diploma percentage" id="twelfth" optional>
-        <input id="twelfth" className={inputClass} />
+        <input
+          id="twelfth"
+          placeholder="94%"
+          className={inputClass}
+          value={draft.twelfth || ""}
+          onChange={(e) => update("twelfth", e.target.value)}
+        />
       </Field>
       <Field label="Active backlogs" id="backlogs" optional>
-        <input id="backlogs" type="number" min="0" className={inputClass} />
+        <input
+          id="backlogs"
+          type="number"
+          min="0"
+          placeholder="0"
+          className={inputClass}
+          value={draft.backlogs || ""}
+          onChange={(e) => update("backlogs", e.target.value)}
+        />
       </Field>
       <Field label="Academic gap" id="gap" optional>
-        <input id="gap" className={inputClass} />
+        <input
+          id="gap"
+          placeholder="None"
+          className={inputClass}
+          value={draft.gap || ""}
+          onChange={(e) => update("gap", e.target.value)}
+        />
       </Field>
       <div className="sm:col-span-2 rounded-lg border border-border bg-surface p-3 text-xs text-muted-foreground">
         Enter valid academic values to mark this section complete. Optional fields do not block
@@ -893,14 +887,25 @@ function SkillsForm({ draft, update }: FormProps) {
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Preferred programming language" id="preferred">
-          <input id="preferred" className={inputClass} />
+          <input
+            id="preferred"
+            placeholder="e.g., Python, JavaScript"
+            className={inputClass}
+            value={draft.preferredLanguage || ""}
+            onChange={(e) => update("preferredLanguage", e.target.value)}
+          />
         </Field>
         <Field label="DSA proficiency" id="dsa">
-          <select id="dsa" className={selectClass}>
+          <select
+            id="dsa"
+            className={selectClass}
+            value={draft.dsaProficiency || ""}
+            onChange={(e) => update("dsaProficiency", e.target.value)}
+          >
             <option value="">Select proficiency</option>
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
           </select>
         </Field>
       </div>
@@ -919,17 +924,34 @@ function PreferencesForm({ draft, update }: FormProps) {
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Preferred domains" id="domains">
-          <input id="domains" className={inputClass} />
+          <input
+            id="domains"
+            placeholder="e.g., FinTech, SaaS"
+            className={inputClass}
+            value={draft.preferredDomains || ""}
+            onChange={(e) => update("preferredDomains", e.target.value)}
+          />
         </Field>
         <Field label="Preferred locations" id="locations">
-          <input id="locations" className={inputClass} />
+          <input
+            id="locations"
+            placeholder="e.g., Bangalore, Remote"
+            className={inputClass}
+            value={draft.preferredLocations || ""}
+            onChange={(e) => update("preferredLocations", e.target.value)}
+          />
         </Field>
         <Field label="Work mode" id="workMode">
-          <select id="workMode" className={selectClass}>
+          <select
+            id="workMode"
+            className={selectClass}
+            value={draft.workMode || ""}
+            onChange={(e) => update("workMode", e.target.value)}
+          >
             <option value="">Select work mode</option>
-            <option>Hybrid</option>
-            <option>Onsite</option>
-            <option>Remote</option>
+            <option value="Hybrid">Hybrid</option>
+            <option value="Onsite">Onsite</option>
+            <option value="Remote">Remote</option>
           </select>
         </Field>
         <Field label="Job-seeking preference" id="jobSeeking">

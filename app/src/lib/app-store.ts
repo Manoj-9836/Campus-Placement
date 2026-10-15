@@ -66,6 +66,15 @@ export type AppState = {
     gender: string;
     country: string;
     cgpa: string;
+    tenth: string;
+    twelfth: string;
+    backlogs: string;
+    gap: string;
+    preferredLanguage: string;
+    dsaProficiency: string;
+    preferredDomains: string;
+    preferredLocations: string;
+    workMode: string;
     programmingLanguages: string[];
     technicalSkills: string[];
     targetRoles: string[];
@@ -111,6 +120,16 @@ function createDefaultState(): AppState {
       gender: "",
       country: "",
       cgpa: "",
+      tenth: "",
+      twelfth: "",
+      backlogs: "",
+      gap: "",
+      preferredLanguage: "",
+      dsaProficiency: "",
+      preferredDomains: "",
+      preferredLocations: "",
+      workMode: "",
+      rollNumber: "",
       programmingLanguages: [],
       technicalSkills: [],
       targetRoles: [],
@@ -120,7 +139,6 @@ function createDefaultState(): AppState {
       githubUrl: "",
       linkedinUrl: "",
       projects: [],
-      rollNumber: "",
       visibilityConfigured: false,
     },
   };
