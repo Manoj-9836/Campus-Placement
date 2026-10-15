@@ -1,29 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   BriefcaseBusiness,
   Camera,
   Check,
-  ChevronDown,
   Code2,
   Eye,
   FileText,
   FolderGit2,
   GraduationCap,
-  Link2,
   Lock,
   Plus,
-  Save,
   ShieldCheck,
   Trash2,
   UserRound,
   X,
+  Loader2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useUser } from "@clerk/react";
 import { AppShell } from "@/components/layout/AppShell";
 import { saveProfile, setVisibility, useAppState, type AppState } from "@/lib/app-store";
+import { useProfileApi, type Profile } from "@/lib/profile-api";
 import {
   getProfileCompletion,
   type ProfileCompletionData,
@@ -87,15 +88,21 @@ const sections: Section[] = [
 ];
 
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/20";
+  "mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20";
 const selectClass = `${inputClass} appearance-none`;
 
 function SettingsPage() {
+  const { user } = useUser();
   const { profile, visibility } = useAppState();
+  const profileApi = useProfileApi();
+
   const [active, setActive] = useState<ProfileSectionId>("basic");
   const [draft, setDraft] = useState<AppState["profile"]>(profile);
   const [draftVisibility, setDraftVisibility] = useState(visibility);
-  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [currentUserClerkId, setCurrentUserClerkId] = useState<string | null>(null);
+
   const completion = useMemo(
     () =>
       getProfileCompletion({
@@ -104,24 +111,135 @@ function SettingsPage() {
       } satisfies ProfileCompletionData),
     [draft, draftVisibility],
   );
+
   const activeIndex = sections.findIndex((section) => section.id === active);
+  const isLastSection = activeIndex === sections.length - 1;
+
+  // Load profile on mount and when user changes
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+
+      // If user changed, reset everything
+      if (currentUserClerkId && currentUserClerkId !== user.id) {
+        // User switched, clear all data
+        setDraft(profile);
+        setDraftVisibility(visibility);
+        setActive("basic");
+        toast.message("Profile cleared for new user");
+      }
+
+      setCurrentUserClerkId(user.id);
+
+      try {
+        setLoading(true);
+        const remoteProfile = await profileApi.getProfile();
+
+        // Merge with current state but prioritize remote data
+        const merged: AppState["profile"] = {
+          ...draft,
+          avatar: remoteProfile.avatar || draft.avatar,
+          name: remoteProfile.fullName || draft.name,
+          rollNumber: remoteProfile.rollNumber || draft.rollNumber,
+          phone: remoteProfile.phone || draft.phone,
+          location: remoteProfile.location || draft.location,
+          institution: remoteProfile.institution || draft.institution,
+          department: remoteProfile.department || draft.department,
+          degree: remoteProfile.degree || draft.degree,
+          currentYear: remoteProfile.currentYear || draft.currentYear,
+          currentSemester: remoteProfile.currentSemester || draft.currentSemester,
+          graduationYear: remoteProfile.graduationYear || draft.graduationYear,
+          country: remoteProfile.country || draft.country,
+          about: remoteProfile.about || draft.about,
+          cgpa: remoteProfile.cgpa || draft.cgpa,
+          programmingLanguages: remoteProfile.programmingLanguages || draft.programmingLanguages,
+          technicalSkills: remoteProfile.technicalSkills || draft.technicalSkills,
+          targetRoles: remoteProfile.targetRoles || draft.targetRoles,
+          jobSeeking: remoteProfile.jobSeeking || draft.jobSeeking,
+          resumeUrl: remoteProfile.resumeUrl || draft.resumeUrl,
+          portfolioUrl: remoteProfile.portfolioUrl || draft.portfolioUrl,
+          githubUrl: remoteProfile.githubUrl || draft.githubUrl,
+          linkedinUrl: remoteProfile.linkedinUrl || draft.linkedinUrl,
+          projects: remoteProfile.projects || draft.projects,
+          email: draft.email,
+          handle: draft.handle,
+          gender: draft.gender,
+          visibilityConfigured: remoteProfile.visibilityConfigured || false,
+        };
+
+        setDraft(merged);
+        setDraftVisibility(remoteProfile.visibility || visibility);
+      } catch (error) {
+        // Silently fail for new users without profile yet
+        console.log("Profile not found or loading error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [user?.id]);
 
   const update = <K extends keyof AppState["profile"]>(key: K, value: AppState["profile"][K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
-  const save = () => {
-    setSaving(true);
-    saveProfile(draft);
-    setVisibility(draftVisibility);
-    window.setTimeout(() => {
-      setSaving(false);
-      toast.success("Profile changes saved");
-    }, 250);
+  const submit = async () => {
+    // Validate roll number
+    if (!draft.rollNumber || draft.rollNumber.trim().length < 3) {
+      toast.error("Roll number is required (minimum 3 characters)");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const profileData: Partial<Profile> = {
+        fullName: draft.name,
+        rollNumber: draft.rollNumber,
+        avatar: draft.avatar,
+        phone: draft.phone,
+        location: draft.location,
+        institution: draft.institution,
+        department: draft.department,
+        degree: draft.degree as any,
+        currentYear: draft.currentYear as any,
+        currentSemester: draft.currentSemester,
+        graduationYear: draft.graduationYear,
+        country: draft.country,
+        about: draft.about,
+        cgpa: draft.cgpa,
+        programmingLanguages: draft.programmingLanguages,
+        technicalSkills: draft.technicalSkills,
+        targetRoles: draft.targetRoles,
+        jobSeeking: draft.jobSeeking as any,
+        resumeUrl: draft.resumeUrl,
+        portfolioUrl: draft.portfolioUrl,
+        githubUrl: draft.githubUrl,
+        linkedinUrl: draft.linkedinUrl,
+        projects: draft.projects,
+        visibility: draftVisibility,
+        visibilityConfigured: true,
+      };
+
+      await profileApi.saveProfile(profileData);
+
+      // Update local state
+      saveProfile(draft);
+      setVisibility(draftVisibility);
+
+      toast.success("Profile submitted successfully!");
+      setActive("basic");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to submit profile");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const cancel = () => {
     setDraft(profile);
     setDraftVisibility(visibility);
+    setActive("basic");
     toast.message("Unsaved changes discarded");
   };
 
@@ -129,6 +247,19 @@ function SettingsPage() {
     const next = sections[index];
     if (next) setActive(next.id);
   };
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-[1440px] flex items-center justify-center min-h-[500px]">
+          <div className="text-center">
+            <Loader2 className="mx-auto mb-4 size-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading your profile...</p>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -267,6 +398,7 @@ function SettingsPage() {
               ) : null}
             </div>
 
+            {/* Navigation Footer - Only show Submit on last section */}
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
               <div className="flex gap-2">
                 <button
@@ -286,23 +418,38 @@ function SettingsPage() {
                   Next <ArrowRight className="size-4" />
                 </button>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={cancel}
-                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={save}
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                >
-                  <Save className="size-4" /> {saving ? "Saving..." : "Save changes"}
-                </button>
-              </div>
+
+              {/* Only show Submit button on last section */}
+              {isLastSection ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={cancel}
+                    disabled={submitting}
+                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submit}
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" /> Submitting...
+                      </>
+                    ) : (
+                      "Submit changes"
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  Continue to next section →
+                </div>
+              )}
             </div>
           </section>
         </div>
@@ -427,6 +574,14 @@ function BasicForm({ draft, update }: FormProps) {
           onChange={(e) => update("name", e.target.value)}
         />
       </Field>
+      <Field label="Roll number" id="rollnumber">
+        <input
+          id="rollnumber"
+          className={inputClass}
+          value={draft.rollNumber}
+          onChange={(e) => update("rollNumber", e.target.value)}
+        />
+      </Field>
       <Field label="Username" id="handle">
         <input
           id="handle"
@@ -451,7 +606,6 @@ function BasicForm({ draft, update }: FormProps) {
           className={inputClass}
           value={draft.phone}
           onChange={(e) => update("phone", e.target.value)}
-          placeholder="+91 ..."
         />
       </Field>
       <Field label="Location" id="location">
@@ -493,11 +647,12 @@ function BasicForm({ draft, update }: FormProps) {
           value={draft.degree}
           onChange={(e) => update("degree", e.target.value)}
         >
-          <option>B.Tech</option>
-          <option>B.E.</option>
-          <option>M.Tech</option>
-          <option>MCA</option>
-          <option>Other</option>
+          <option value="">Select degree</option>
+          <option value="B.Tech">B.Tech</option>
+          <option value="B.E.">B.E.</option>
+          <option value="M.Tech">M.Tech</option>
+          <option value="MCA">MCA</option>
+          <option value="Other">Other</option>
         </select>
       </Field>
       <Field label="Current year" id="currentYear">
@@ -508,10 +663,10 @@ function BasicForm({ draft, update }: FormProps) {
           onChange={(e) => update("currentYear", e.target.value)}
         >
           <option value="">Select year</option>
-          <option>1st Year</option>
-          <option>2nd Year</option>
-          <option>3rd Year</option>
-          <option>4th Year</option>
+          <option value="1st Year">1st Year</option>
+          <option value="2nd Year">2nd Year</option>
+          <option value="3rd Year">3rd Year</option>
+          <option value="4th Year">4th Year</option>
         </select>
       </Field>
       <Field label="Current semester" id="currentSemester" optional>
@@ -561,23 +716,22 @@ function AcademicForm({ draft, update }: FormProps) {
           className={inputClass}
           value={draft.cgpa}
           onChange={(e) => update("cgpa", e.target.value)}
-          placeholder="0 - 10"
         />
       </Field>
       <Field label="CGPA scale" id="scale">
-        <input id="scale" className={inputClass} defaultValue="10" />
+        <input id="scale" className={inputClass} defaultValue="10" disabled />
       </Field>
       <Field label="10th percentage / CGPA" id="tenth" optional>
-        <input id="tenth" className={inputClass} placeholder="e.g. 92%" />
+        <input id="tenth" className={inputClass} />
       </Field>
       <Field label="12th / Diploma percentage" id="twelfth" optional>
-        <input id="twelfth" className={inputClass} placeholder="e.g. 88%" />
+        <input id="twelfth" className={inputClass} />
       </Field>
       <Field label="Active backlogs" id="backlogs" optional>
-        <input id="backlogs" type="number" min="0" className={inputClass} placeholder="0" />
+        <input id="backlogs" type="number" min="0" className={inputClass} />
       </Field>
       <Field label="Academic gap" id="gap" optional>
-        <input id="gap" className={inputClass} placeholder="None" />
+        <input id="gap" className={inputClass} />
       </Field>
       <div className="sm:col-span-2 rounded-lg border border-border bg-surface p-3 text-xs text-muted-foreground">
         Enter valid academic values to mark this section complete. Optional fields do not block
@@ -655,14 +809,15 @@ function SkillsForm({ draft, update }: FormProps) {
         label="Technical skills"
         values={draft.technicalSkills}
         onChange={(value) => update("technicalSkills", value)}
-        placeholder="React, Node.js, SQL..."
+        placeholder="Add skills and press Enter"
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Preferred programming language" id="preferred">
-          <input id="preferred" className={inputClass} placeholder="JavaScript" />
+          <input id="preferred" className={inputClass} />
         </Field>
         <Field label="DSA proficiency" id="dsa">
           <select id="dsa" className={selectClass}>
+            <option value="">Select proficiency</option>
             <option>Beginner</option>
             <option>Intermediate</option>
             <option>Advanced</option>
@@ -680,17 +835,18 @@ function PreferencesForm({ draft, update }: FormProps) {
         label="Target job roles"
         values={draft.targetRoles}
         onChange={(value) => update("targetRoles", value)}
-        placeholder="Software Engineer..."
+        placeholder="Add a role and press Enter"
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Preferred domains" id="domains">
-          <input id="domains" className={inputClass} placeholder="FinTech, SaaS..." />
+          <input id="domains" className={inputClass} />
         </Field>
         <Field label="Preferred locations" id="locations">
-          <input id="locations" className={inputClass} placeholder="Bengaluru, Hyderabad..." />
+          <input id="locations" className={inputClass} />
         </Field>
         <Field label="Work mode" id="workMode">
           <select id="workMode" className={selectClass}>
+            <option value="">Select work mode</option>
             <option>Hybrid</option>
             <option>Onsite</option>
             <option>Remote</option>
@@ -730,7 +886,6 @@ function ProjectsForm({ draft, update }: FormProps) {
             className={inputClass}
             value={draft.resumeUrl}
             onChange={(e) => update("resumeUrl", e.target.value)}
-            placeholder="https://..."
           />
         </Field>
         <Field label="Portfolio website" id="portfolioUrl" optional>
@@ -740,7 +895,6 @@ function ProjectsForm({ draft, update }: FormProps) {
             className={inputClass}
             value={draft.portfolioUrl}
             onChange={(e) => update("portfolioUrl", e.target.value)}
-            placeholder="https://..."
           />
         </Field>
         <Field label="GitHub" id="githubUrl" optional>
@@ -750,7 +904,6 @@ function ProjectsForm({ draft, update }: FormProps) {
             className={inputClass}
             value={draft.githubUrl}
             onChange={(e) => update("githubUrl", e.target.value)}
-            placeholder="https://github.com/..."
           />
         </Field>
         <Field label="LinkedIn" id="linkedinUrl" optional>
@@ -760,7 +913,6 @@ function ProjectsForm({ draft, update }: FormProps) {
             className={inputClass}
             value={draft.linkedinUrl}
             onChange={(e) => update("linkedinUrl", e.target.value)}
-            placeholder="https://linkedin.com/in/..."
           />
         </Field>
       </div>
@@ -794,7 +946,6 @@ function ProjectsForm({ draft, update }: FormProps) {
                     ),
                   )
                 }
-                placeholder="Project title"
               />
               <textarea
                 className={`${inputClass.replace("mt-1.5 ", "")} resize-y`}
@@ -808,7 +959,6 @@ function ProjectsForm({ draft, update }: FormProps) {
                     ),
                   )
                 }
-                placeholder="Short description"
                 rows={2}
               />
               <input
@@ -823,7 +973,6 @@ function ProjectsForm({ draft, update }: FormProps) {
                     ),
                   )
                 }
-                placeholder="Technologies used"
               />
             </div>
             <button
