@@ -17,6 +17,8 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { isClerkConfigured } from "@/components/auth/auth-config";
 import { useEffect, useState } from "react";
 import { currentUser, contests, sheets, leaderboard, questions, companies } from "@/lib/mock-data";
+import { useProfileApi } from "@/lib/profile-api";
+import { useUser } from "@clerk/react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -84,6 +86,9 @@ const modules = [
 
 function HomePage() {
   const [authMode, setAuthMode] = useState<"sign-in" | "sign-up" | null>(null);
+  const [displayName, setDisplayName] = useState<string>("Student");
+  const { user } = useUser();
+  const profileApi = useProfileApi();
 
   useEffect(() => {
     const openAuth = (event: Event) => {
@@ -93,6 +98,30 @@ function HomePage() {
     window.addEventListener("lendi:open-auth", openAuth);
     return () => window.removeEventListener("lendi:open-auth", openAuth);
   }, []);
+
+  // Fetch profile name from database
+  useEffect(() => {
+    const loadProfileName = async () => {
+      if (!user?.id) return;
+
+      try {
+        const profile = await profileApi.getProfile();
+        if (profile.fullName && profile.fullName.trim()) {
+          // Use first name from full name
+          const firstName = profile.fullName.split(" ")[0];
+          setDisplayName(firstName);
+        } else {
+          setDisplayName("Student");
+        }
+      } catch (error) {
+        // Silently fail and use default "Student"
+        console.log("Profile not found, using default greeting");
+        setDisplayName("Student");
+      }
+    };
+
+    loadProfileName();
+  }, [user?.id]);
 
   return (
     <AppShell>
@@ -105,7 +134,7 @@ function HomePage() {
         </p>
 
         <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
-          Welcome back, {currentUser.name.split(" ")[0]}. Your{" "}
+          Welcome back, {displayName}. Your{" "}
           <span className="gradient-text">coding journey</span> in one place.
         </h1>
 

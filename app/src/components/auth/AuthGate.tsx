@@ -2,6 +2,8 @@ import { useAuth, useUser } from "@clerk/react";
 import { useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { resetAppState } from "@/lib/app-store";
+import { appConfig } from "@/config/app";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api/v1";
 
@@ -19,6 +21,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
       });
     }
   }, [isLoaded, isSignedIn, pathname, router]);
+
+  // Clear profile data when user logs out
+  useEffect(() => {
+    if (isLoaded && !isSignedIn && syncedUserId.current !== null) {
+      // User logged out, clear all profile data including avatar
+      localStorage.removeItem(appConfig.storageKey);
+      syncedUserId.current = null;
+      return;
+    }
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (!isSignedIn) {

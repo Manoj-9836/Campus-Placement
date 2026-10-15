@@ -123,8 +123,37 @@ function SettingsPage() {
       // If user changed, reset everything
       if (currentUserClerkId && currentUserClerkId !== user.id) {
         // User switched, clear all data
-        setDraft(profile);
-        setDraftVisibility(visibility);
+        const emptyProfile: AppState["profile"] = {
+          avatar: "",
+          name: "",
+          handle: "",
+          location: "",
+          institution: "",
+          about: "",
+          email: "",
+          phone: "",
+          department: "",
+          degree: "",
+          currentYear: "",
+          currentSemester: "",
+          graduationYear: "",
+          gender: "",
+          country: "",
+          cgpa: "",
+          programmingLanguages: [],
+          technicalSkills: [],
+          targetRoles: [],
+          jobSeeking: "",
+          resumeUrl: "",
+          portfolioUrl: "",
+          githubUrl: "",
+          linkedinUrl: "",
+          projects: [],
+          rollNumber: "",
+          visibilityConfigured: false,
+        };
+        setDraft(emptyProfile);
+        setDraftVisibility("public");
         setActive("basic");
         toast.message("Profile cleared for new user");
       }
@@ -135,40 +164,39 @@ function SettingsPage() {
         setLoading(true);
         const remoteProfile = await profileApi.getProfile();
 
-        // Merge with current state but prioritize remote data
+        // Start with empty defaults
         const merged: AppState["profile"] = {
-          ...draft,
-          avatar: remoteProfile.avatar || draft.avatar,
-          name: remoteProfile.fullName || draft.name,
-          rollNumber: remoteProfile.rollNumber || draft.rollNumber,
-          phone: remoteProfile.phone || draft.phone,
-          location: remoteProfile.location || draft.location,
-          institution: remoteProfile.institution || draft.institution,
-          department: remoteProfile.department || draft.department,
-          degree: remoteProfile.degree || draft.degree,
-          currentYear: remoteProfile.currentYear || draft.currentYear,
-          currentSemester: remoteProfile.currentSemester || draft.currentSemester,
-          graduationYear: remoteProfile.graduationYear || draft.graduationYear,
-          country: remoteProfile.country || draft.country,
-          about: remoteProfile.about || draft.about,
-          cgpa: remoteProfile.cgpa || draft.cgpa,
-          programmingLanguages: remoteProfile.programmingLanguages || draft.programmingLanguages,
-          technicalSkills: remoteProfile.technicalSkills || draft.technicalSkills,
-          targetRoles: remoteProfile.targetRoles || draft.targetRoles,
-          jobSeeking: remoteProfile.jobSeeking || draft.jobSeeking,
-          resumeUrl: remoteProfile.resumeUrl || draft.resumeUrl,
-          portfolioUrl: remoteProfile.portfolioUrl || draft.portfolioUrl,
-          githubUrl: remoteProfile.githubUrl || draft.githubUrl,
-          linkedinUrl: remoteProfile.linkedinUrl || draft.linkedinUrl,
-          projects: remoteProfile.projects || draft.projects,
-          email: draft.email,
-          handle: draft.handle,
-          gender: draft.gender,
+          avatar: remoteProfile.avatar || "",
+          name: remoteProfile.fullName || "",
+          rollNumber: remoteProfile.rollNumber || "",
+          phone: remoteProfile.phone || "",
+          location: remoteProfile.location || "",
+          institution: remoteProfile.institution || "",
+          department: remoteProfile.department || "",
+          degree: remoteProfile.degree || "",
+          currentYear: remoteProfile.currentYear || "",
+          currentSemester: remoteProfile.currentSemester || "",
+          graduationYear: remoteProfile.graduationYear || "",
+          country: remoteProfile.country || "",
+          about: remoteProfile.about || "",
+          cgpa: remoteProfile.cgpa || "",
+          programmingLanguages: remoteProfile.programmingLanguages || [],
+          technicalSkills: remoteProfile.technicalSkills || [],
+          targetRoles: remoteProfile.targetRoles || [],
+          jobSeeking: remoteProfile.jobSeeking || "",
+          resumeUrl: remoteProfile.resumeUrl || "",
+          portfolioUrl: remoteProfile.portfolioUrl || "",
+          githubUrl: remoteProfile.githubUrl || "",
+          linkedinUrl: remoteProfile.linkedinUrl || "",
+          projects: remoteProfile.projects || [],
+          email: "",
+          handle: "",
+          gender: "",
           visibilityConfigured: remoteProfile.visibilityConfigured || false,
         };
 
         setDraft(merged);
-        setDraftVisibility(remoteProfile.visibility || visibility);
+        setDraftVisibility(remoteProfile.visibility || "public");
       } catch (error) {
         // Silently fail for new users without profile yet
         console.log("Profile not found or loading error");
@@ -178,7 +206,47 @@ function SettingsPage() {
     };
 
     loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  // Clear data when user logs out (user becomes null)
+  useEffect(() => {
+    if (user === null && currentUserClerkId !== null) {
+      const emptyProfile: AppState["profile"] = {
+        avatar: "",
+        name: "",
+        handle: "",
+        location: "",
+        institution: "",
+        about: "",
+        email: "",
+        phone: "",
+        department: "",
+        degree: "",
+        currentYear: "",
+        currentSemester: "",
+        graduationYear: "",
+        gender: "",
+        country: "",
+        cgpa: "",
+        programmingLanguages: [],
+        technicalSkills: [],
+        targetRoles: [],
+        jobSeeking: "",
+        resumeUrl: "",
+        portfolioUrl: "",
+        githubUrl: "",
+        linkedinUrl: "",
+        projects: [],
+        rollNumber: "",
+        visibilityConfigured: false,
+      };
+      setDraft(emptyProfile);
+      setDraftVisibility("public");
+      setActive("basic");
+      setCurrentUserClerkId(null);
+    }
+  }, [user]);
 
   const update = <K extends keyof AppState["profile"]>(key: K, value: AppState["profile"][K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -569,6 +637,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Full name" id="name">
         <input
           id="name"
+          placeholder="Enter your full name"
           className={inputClass}
           value={draft.name || ""}
           onChange={(e) => update("name", e.target.value)}
@@ -577,6 +646,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Roll number" id="rollnumber">
         <input
           id="rollnumber"
+          placeholder="e.g., CSE2024001"
           className={inputClass}
           value={draft.rollNumber || ""}
           onChange={(e) => update("rollNumber", e.target.value)}
@@ -585,6 +655,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Username" id="handle">
         <input
           id="handle"
+          placeholder="Enter your username"
           className={inputClass}
           value={draft.handle || ""}
           onChange={(e) => update("handle", e.target.value)}
@@ -594,6 +665,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="email"
           type="email"
+          placeholder="you@example.com"
           className={inputClass}
           value={draft.email || ""}
           onChange={(e) => update("email", e.target.value)}
@@ -603,6 +675,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="phone"
           type="tel"
+          placeholder="+91 98765 43210"
           className={inputClass}
           value={draft.phone || ""}
           onChange={(e) => update("phone", e.target.value)}
@@ -611,6 +684,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Location" id="location">
         <input
           id="location"
+          placeholder="City, State"
           className={inputClass}
           value={draft.location || ""}
           onChange={(e) => update("location", e.target.value)}
@@ -619,6 +693,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Country" id="country" optional>
         <input
           id="country"
+          placeholder="India"
           className={inputClass}
           value={draft.country || ""}
           onChange={(e) => update("country", e.target.value)}
@@ -627,6 +702,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Institution / College" id="institution">
         <input
           id="institution"
+          placeholder="Your college name"
           className={inputClass}
           value={draft.institution || ""}
           onChange={(e) => update("institution", e.target.value)}
@@ -635,6 +711,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Department / Branch" id="department">
         <input
           id="department"
+          placeholder="e.g., Computer Science"
           className={inputClass}
           value={draft.department || ""}
           onChange={(e) => update("department", e.target.value)}
@@ -672,6 +749,7 @@ function BasicForm({ draft, update }: FormProps) {
       <Field label="Current semester" id="currentSemester" optional>
         <input
           id="currentSemester"
+          placeholder="e.g., 5-2"
           className={inputClass}
           value={draft.currentSemester || ""}
           onChange={(e) => update("currentSemester", e.target.value)}
@@ -681,6 +759,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="graduationYear"
           type="number"
+          placeholder="2024"
           className={inputClass}
           value={draft.graduationYear || ""}
           onChange={(e) => update("graduationYear", e.target.value)}
@@ -691,6 +770,7 @@ function BasicForm({ draft, update }: FormProps) {
           id="about"
           maxLength={500}
           rows={4}
+          placeholder="Tell us about yourself, your interests, and goals..."
           className={`${inputClass} resize-y sm:col-span-2`}
           value={draft.about || ""}
           onChange={(e) => update("about", e.target.value)}
