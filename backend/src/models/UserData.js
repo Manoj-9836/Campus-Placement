@@ -101,6 +101,30 @@ const userDataSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    handle: {
+      type: String,
+      trim: true,
+    },
+    preferredLanguage: {
+      type: String,
+      trim: true,
+    },
+    dsaProficiency: {
+      type: String,
+      trim: true,
+    },
+    preferredDomains: {
+      type: String,
+      trim: true,
+    },
+    preferredLocations: {
+      type: String,
+      trim: true,
+    },
+    workMode: {
+      type: String,
+      trim: true,
+    },
     projects: [
       {
         id: String,
