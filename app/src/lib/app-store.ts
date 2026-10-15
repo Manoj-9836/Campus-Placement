@@ -52,6 +52,7 @@ export type AppState = {
     avatar: string;
     name: string;
     handle: string;
+    rollNumber: string;
     location: string;
     institution: string;
     about: string;

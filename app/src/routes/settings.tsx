@@ -570,7 +570,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="name"
           className={inputClass}
-          value={draft.name}
+          value={draft.name || ""}
           onChange={(e) => update("name", e.target.value)}
         />
       </Field>
@@ -578,7 +578,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="rollnumber"
           className={inputClass}
-          value={draft.rollNumber}
+          value={draft.rollNumber || ""}
           onChange={(e) => update("rollNumber", e.target.value)}
         />
       </Field>
@@ -586,7 +586,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="handle"
           className={inputClass}
-          value={draft.handle}
+          value={draft.handle || ""}
           onChange={(e) => update("handle", e.target.value)}
         />
       </Field>
@@ -595,7 +595,7 @@ function BasicForm({ draft, update }: FormProps) {
           id="email"
           type="email"
           className={inputClass}
-          value={draft.email}
+          value={draft.email || ""}
           onChange={(e) => update("email", e.target.value)}
         />
       </Field>
@@ -604,7 +604,7 @@ function BasicForm({ draft, update }: FormProps) {
           id="phone"
           type="tel"
           className={inputClass}
-          value={draft.phone}
+          value={draft.phone || ""}
           onChange={(e) => update("phone", e.target.value)}
         />
       </Field>
@@ -612,7 +612,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="location"
           className={inputClass}
-          value={draft.location}
+          value={draft.location || ""}
           onChange={(e) => update("location", e.target.value)}
         />
       </Field>
@@ -620,7 +620,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="country"
           className={inputClass}
-          value={draft.country}
+          value={draft.country || ""}
           onChange={(e) => update("country", e.target.value)}
         />
       </Field>
@@ -628,7 +628,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="institution"
           className={inputClass}
-          value={draft.institution}
+          value={draft.institution || ""}
           onChange={(e) => update("institution", e.target.value)}
         />
       </Field>
@@ -636,7 +636,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="department"
           className={inputClass}
-          value={draft.department}
+          value={draft.department || ""}
           onChange={(e) => update("department", e.target.value)}
         />
       </Field>
@@ -644,7 +644,7 @@ function BasicForm({ draft, update }: FormProps) {
         <select
           id="degree"
           className={selectClass}
-          value={draft.degree}
+          value={draft.degree || ""}
           onChange={(e) => update("degree", e.target.value)}
         >
           <option value="">Select degree</option>
@@ -659,7 +659,7 @@ function BasicForm({ draft, update }: FormProps) {
         <select
           id="currentYear"
           className={selectClass}
-          value={draft.currentYear}
+          value={draft.currentYear || ""}
           onChange={(e) => update("currentYear", e.target.value)}
         >
           <option value="">Select year</option>
@@ -673,7 +673,7 @@ function BasicForm({ draft, update }: FormProps) {
         <input
           id="currentSemester"
           className={inputClass}
-          value={draft.currentSemester}
+          value={draft.currentSemester || ""}
           onChange={(e) => update("currentSemester", e.target.value)}
         />
       </Field>
@@ -682,7 +682,7 @@ function BasicForm({ draft, update }: FormProps) {
           id="graduationYear"
           type="number"
           className={inputClass}
-          value={draft.graduationYear}
+          value={draft.graduationYear || ""}
           onChange={(e) => update("graduationYear", e.target.value)}
         />
       </Field>
@@ -692,11 +692,11 @@ function BasicForm({ draft, update }: FormProps) {
           maxLength={500}
           rows={4}
           className={`${inputClass} resize-y sm:col-span-2`}
-          value={draft.about}
+          value={draft.about || ""}
           onChange={(e) => update("about", e.target.value)}
         />
         <span className="mt-1 block text-right text-[11px] text-muted-foreground">
-          {draft.about.length}/500
+          {(draft.about || "").length}/500
         </span>
       </Field>
     </div>
