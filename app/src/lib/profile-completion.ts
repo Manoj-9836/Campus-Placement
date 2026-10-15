@@ -43,7 +43,7 @@ const SECTION_IDS: ProfileSectionId[] = [
   "visibility",
 ];
 
-const hasText = (value: string) => value.trim().length > 0;
+const hasText = (value: string | undefined) => value && value.trim().length > 0;
 
 export function getProfileCompletion(data: ProfileCompletionData): ProfileCompletion {
   const validBasic = [
@@ -55,13 +55,30 @@ export function getProfileCompletion(data: ProfileCompletionData): ProfileComple
     data.currentYear,
     data.graduationYear,
   ].every(hasText);
+
   const validAcademic = hasText(data.cgpa) && Number(data.cgpa) >= 0 && Number(data.cgpa) <= 10;
+
+  // Skills: must have at least 1 programming language and 3 technical skills
   const validSkills =
-    data.programmingLanguages.some(hasText) && data.technicalSkills.filter(hasText).length >= 3;
-  const validPreferences = data.targetRoles.some(hasText) && hasText(data.jobSeeking);
+    data.programmingLanguages.filter(hasText).length > 0 &&
+    data.technicalSkills.filter(hasText).length >= 3;
+
+  // Preferences: must have target roles, job seeking, and all preference fields filled
+  const validPreferences =
+    data.targetRoles.filter(hasText).length > 0 &&
+    hasText(data.jobSeeking) &&
+    hasText(data.preferredLanguage) &&
+    hasText(data.dsaProficiency) &&
+    hasText(data.preferredDomains) &&
+    hasText(data.preferredLocations) &&
+    hasText(data.workMode);
+
   const validProjects =
     data.projects.some((project) => hasText(project.title)) || hasText(data.resumeUrl);
-  const validVisibility = data.visibilityConfigured;
+
+  // Visibility: only complete if user explicitly configured it
+  const validVisibility = data.visibilityConfigured === true;
+
   const validBySection: Record<ProfileSectionId, boolean> = {
     basic: validBasic,
     academic: validAcademic,
@@ -72,7 +89,7 @@ export function getProfileCompletion(data: ProfileCompletionData): ProfileComple
   };
 
   const sections = Object.fromEntries(
-    SECTION_IDS.map((id) => [id, validBySection[id] ? "completed" : "not-started"]),
+    SECTION_IDS.map((id) => [id, validBySection[id] ? "completed" : "in-progress"]),
   ) as Record<ProfileSectionId, ProfileSectionStatus>;
   const completedSections = SECTION_IDS.filter((id) => validBySection[id]).length;
 

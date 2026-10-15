@@ -14,11 +14,15 @@ import { useAppState } from "@/lib/app-store";
 function ProfileAvatar() {
   const { user } = useUser();
   const { profile } = useAppState();
+
+  // Force re-render when user changes to refresh avatar
+  const avatarKey = user?.id || "no-user";
+
   if (profile.avatar) {
-    return <img src={profile.avatar} alt="Profile" className="size-full object-cover" />;
+    return <img key={`avatar-${avatarKey}`} src={profile.avatar} alt="Profile" className="size-full object-cover" />;
   }
   return user?.imageUrl ? (
-    <img src={user.imageUrl} alt={user.fullName ?? "Profile"} className="size-full object-cover" />
+    <img key={`avatar-${avatarKey}`} src={user.imageUrl} alt={user.fullName ?? "Profile"} className="size-full object-cover" />
   ) : null;
 }
 
