@@ -14,6 +14,11 @@ export type ProfileCompletionData = {
   technicalSkills: string[];
   targetRoles: string[];
   jobSeeking: string;
+  preferredLanguage?: string;
+  dsaProficiency?: string;
+  preferredDomains?: string;
+  preferredLocations?: string;
+  workMode?: string;
   resumeUrl: string;
   projects: { title: string }[];
   visibility: "public" | "private";

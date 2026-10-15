@@ -19,6 +19,16 @@ export interface Profile {
   country?: string;
   about?: string;
   cgpa?: string;
+  tenth?: string;
+  twelfth?: string;
+  backlogs?: string;
+  gap?: string;
+  preferredLanguage?: string;
+  dsaProficiency?: string;
+  preferredDomains?: string;
+  preferredLocations?: string;
+  workMode?: string;
+  handle?: string;
   programmingLanguages?: string[];
   technicalSkills?: string[];
   targetRoles?: string[];

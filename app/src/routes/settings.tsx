@@ -263,7 +263,7 @@ function SettingsPage() {
         linkedinUrl: draft.linkedinUrl,
         projects: draft.projects,
         visibility: draftVisibility,
-        visibilityConfigured: true,
+        visibilityConfigured: draftVisibility !== "public" || visibility !== "public" ? true : false,
       };
 
       await profileApi.saveProfile(profileData);
