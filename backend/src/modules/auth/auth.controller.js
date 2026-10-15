@@ -48,10 +48,21 @@ async function logoutAll(req, res, next) {
   } catch (error) {
     return next(error);
   }
+
+}
+
+async function clerkSync(req, res, next) {
+  try {
+    const result = await authService.syncClerkUser(req.clerkUser);
+    console.info(`User synced: ${req.clerkUser.email} via ${req.clerkUser.provider}`);
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
 }
 
 function me(req, res) {
   return res.status(200).json({ user: req.user.toPublicJSON() });
 }
 
-module.exports = { register, login, refresh, logout, logoutAll, me };
+module.exports = { register, login, refresh, logout, logoutAll, clerkSync, me };

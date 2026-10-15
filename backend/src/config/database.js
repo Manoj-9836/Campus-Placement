@@ -7,6 +7,7 @@ async function connectDatabase() {
   mongoose.connection.on("disconnected", () => console.warn("MongoDB disconnected"));
 
   await mongoose.connect(env.MONGODB_URI, {
+    dbName: env.MONGODB_DATABASE,
     serverSelectionTimeoutMS: 10_000,
   });
 }

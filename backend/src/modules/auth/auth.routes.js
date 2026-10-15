@@ -1,7 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const controller = require("./auth.controller");
-const { requireAuth } = require("../../middleware/auth");
+const { requireAuth, requireClerkAuth } = require("../../middleware/auth");
 
 const router = express.Router();
 const authLimiter = rateLimit({
@@ -14,6 +14,7 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, controller.register);
 router.post("/login", authLimiter, controller.login);
+router.post("/clerk-sync", requireClerkAuth, controller.clerkSync);
 router.post("/refresh", authLimiter, controller.refresh);
 router.post("/logout", controller.logout);
 router.post("/logout-all", requireAuth, controller.logoutAll);

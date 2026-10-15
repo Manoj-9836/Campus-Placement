@@ -94,7 +94,7 @@ function WorkspacePage() {
       </dl>
 
       <div className="card-surface mt-5 flex flex-wrap items-center gap-3 p-4">
-        <div className="relative min-w-[220px] flex-1">
+        <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             value={query}

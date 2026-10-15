@@ -52,6 +52,50 @@ paths:
       responses:
         '200': { description: Signed in, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/clerk-sync:
+    post:
+      tags: [Auth]
+      summary: Verify a Clerk session and sync the current user
+      responses:
+        '200': { description: Current Clerk user, content: { application/json: { schema: { type: object, properties: { user: { $ref: '#/components/schemas/User' } } } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /notes:
+    get:
+      tags: [Notes]
+      summary: List notes for the authenticated user
+      responses:
+        '200': { description: User notes }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Notes]
+      summary: Create a note for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body, kind]
+              properties:
+                title: { type: string, maxLength: 200 }
+                body: { type: string, maxLength: 20000 }
+                kind: { type: string, enum: [question, general] }
+                question: { type: string, maxLength: 300 }
+      responses:
+        '201': { description: Note created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /notes/{noteId}:
+    delete:
+      tags: [Notes]
+      summary: Delete an owned note
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Note deleted }
+        '404': { description: Note not found }
   /auth/refresh:
     post:
       tags: [Auth]

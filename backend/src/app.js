@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const env = require("./config/env");
 const authRoutes = require("./modules/auth/auth.routes");
+const noteRoutes = require("./modules/notes/note.routes");
 const { notFoundHandler, errorHandler } = require("./middleware/error");
 
 const app = express();
@@ -16,6 +17,7 @@ const healthCheck = (req, res) => res.status(200).json({ status: "ok" });
 app.get("/health", healthCheck);
 app.get("/api/v1/health", healthCheck);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/notes", noteRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

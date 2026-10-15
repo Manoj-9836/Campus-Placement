@@ -15,8 +15,10 @@ npm start
 Before starting, edit `.env`:
 
 - Set `MONGODB_URI` to the MongoDB Atlas connection string.
+- Set `MONGODB_DATABASE` to `campus_placement`. MongoDB creates this database and its collections on the first write.
 - Set `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` to different random values of at least 32 characters.
 - Add the frontend URL to `CORS_ORIGINS` if it is not `http://localhost:5173`.
+- Set `CLERK_SECRET_KEY` for backend Clerk token verification. The frontend publishable key belongs in `app/.env` as `VITE_CLERK_PUBLISHABLE_KEY`.
 
 The Atlas database user must have read/write permissions, and the machine running the API must be allowed in Atlas Network Access. Do not commit `.env`.
 
@@ -28,11 +30,20 @@ Base URL: `http://localhost:5000/api/v1`
 | --- | --- | --- | --- |
 | `POST` | `/auth/register` | No | Create a student account and receive tokens |
 | `POST` | `/auth/login` | No | Authenticate and receive tokens |
+| `POST` | `/auth/clerk-sync` | Clerk bearer token | Verify a Clerk session and sync the current user |
 | `POST` | `/auth/refresh` | No | Rotate a refresh token and receive new tokens |
 | `POST` | `/auth/logout` | No | Revoke one refresh token |
 | `POST` | `/auth/logout-all` | Bearer | Revoke every refresh token for the current user |
 | `GET` | `/auth/me` | Bearer | Return the authenticated user's public profile |
 | `GET` | `/health` | No | Check API health |
+
+Google users are stored in the `google_users` collection, while password accounts are
+stored in the `users` collection. Both collections use the same profile schema; only
+password accounts store `passwordHash`. The first successful login creates the account,
+and later logins update the existing record instead of creating another one.
+
+Notes are stored in the `notes` collection. Every note contains the verified Clerk user ID
+as its owner, and the notes endpoints only return or mutate notes owned by that user.
 
 ## Thunder Client Test Sequence
 

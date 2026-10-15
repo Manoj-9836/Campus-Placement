@@ -1,12 +1,26 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, Flame, Moon, PanelLeft, Sun, ChevronRight } from "lucide-react";
+import { useUser } from "@clerk/react";
 import { toast } from "sonner";
 import { AppSidebar } from "./AppSidebar";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { currentUser } from "@/lib/mock-data";
 import { appConfig } from "@/config/app";
 import { cn } from "@/lib/utils";
+import { isClerkConfigured } from "@/components/auth/auth-config";
+import { useAppState } from "@/lib/app-store";
+
+function ProfileAvatar() {
+  const { user } = useUser();
+  const { profile } = useAppState();
+  if (profile.avatar) {
+    return <img src={profile.avatar} alt="Profile" className="size-full object-cover" />;
+  }
+  return user?.imageUrl ? (
+    <img src={user.imageUrl} alt={user.fullName ?? "Profile"} className="size-full object-cover" />
+  ) : null;
+}
 
 function useThemeToggle() {
   const [dark, setDark] = useState(true);
@@ -46,16 +60,14 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      {!collapsed && (
-        <aside
-          className={cn(
-            "fixed inset-y-0 left-0 z-30 hidden border-r border-sidebar-border lg:block",
-            wideSidebar ? "w-80" : "w-64",
-          )}
-        >
-          <AppSidebar />
-        </aside>
-      )}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden border-r border-sidebar-border lg:block",
+          collapsed ? "w-16" : wideSidebar ? "w-80" : "w-64",
+        )}
+      >
+        <AppSidebar collapsed={collapsed} />
+      </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -68,12 +80,12 @@ export function AppShell({
       <div
         className={cn(
           "flex min-w-0 flex-1 flex-col",
-          !collapsed && (wideSidebar ? "lg:pl-80" : "lg:pl-64"),
+          collapsed ? "lg:pl-16" : wideSidebar ? "lg:pl-80" : "lg:pl-64",
         )}
       >
         <header
           className={cn(
-            "sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur sm:px-5",
+            "sticky top-0 z-20 flex min-w-0 h-16 items-center gap-1.5 border-b border-border bg-card/95 px-2.5 backdrop-blur sm:gap-2 sm:px-5",
             hideHeader && "lg:hidden",
           )}
         >
@@ -88,9 +100,11 @@ export function AppShell({
             <PanelLeft className="size-5" />
           </button>
 
-          <span className="text-base font-semibold lg:hidden">{appConfig.name}</span>
+          <span className="min-w-0 truncate text-base font-semibold lg:hidden">
+            {appConfig.name}
+          </span>
 
-          <div className="ml-auto flex items-center gap-1 sm:gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-3">
             <Link
               to="/company-wise-kit"
               className="hidden items-center gap-2 rounded-lg border border-primary bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-primary/10 sm:flex"
@@ -99,7 +113,7 @@ export function AppShell({
               <ChevronRight className="size-4 text-primary" />
             </Link>
 
-            <span className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground">
+            <span className="hidden items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground sm:flex">
               <Flame className="size-4 text-primary" />
               {currentUser.streak}
             </span>
@@ -108,7 +122,7 @@ export function AppShell({
               type="button"
               aria-label="Notifications"
               onClick={() => toast.message("Notifications will appear here when enabled.")}
-              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:p-2"
             >
               <Bell className="size-5" />
             </button>
@@ -117,7 +131,7 @@ export function AppShell({
               type="button"
               aria-label="Toggle theme"
               onClick={toggle}
-              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:p-2"
             >
               {dark ? <Moon className="size-5" /> : <Sun className="size-5" />}
             </button>
@@ -125,12 +139,16 @@ export function AppShell({
             <Link
               to="/settings"
               aria-label="Profile settings"
-              className="size-9 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-glow"
-            />
+              className="size-8 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-primary-glow sm:size-9"
+            >
+              {isClerkConfigured ? <ProfileAvatar /> : null}
+            </Link>
           </div>
         </header>
 
-        <main className={cn("min-w-0 flex-1 px-3 py-5 sm:px-5 lg:px-8", fullWidth && "!p-0")}>
+        <main
+          className={cn("min-w-0 flex-1 px-2.5 py-4 sm:px-5 sm:py-5 lg:px-8", fullWidth && "!p-0")}
+        >
           {children}
         </main>
       </div>
@@ -148,8 +166,8 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div>
+    <div className="mb-6 flex min-w-0 flex-wrap items-start justify-between gap-3 sm:items-end">
+      <div className="min-w-0">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
         {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
       </div>

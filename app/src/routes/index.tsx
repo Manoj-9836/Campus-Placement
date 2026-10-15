@@ -13,6 +13,9 @@ import {
   Trophy,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { isClerkConfigured } from "@/components/auth/auth-config";
+import { useEffect, useState } from "react";
 import { currentUser, contests, sheets, leaderboard, questions, companies } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
@@ -80,6 +83,17 @@ const modules = [
 ];
 
 function HomePage() {
+  const [authMode, setAuthMode] = useState<"sign-in" | "sign-up" | null>(null);
+
+  useEffect(() => {
+    const openAuth = (event: Event) => {
+      const mode = (event as CustomEvent<"sign-in" | "sign-up">).detail;
+      setAuthMode(mode ?? "sign-in");
+    };
+    window.addEventListener("lendi:open-auth", openAuth);
+    return () => window.removeEventListener("lendi:open-auth", openAuth);
+  }, []);
+
   return (
     <AppShell>
       <section className="card-surface relative overflow-hidden p-6 sm:p-10">
@@ -247,6 +261,13 @@ function HomePage() {
 
         <RightRail />
       </div>
+      {isClerkConfigured ? (
+        <AuthModal
+          open={authMode !== null}
+          initialMode={authMode ?? "sign-in"}
+          onClose={() => setAuthMode(null)}
+        />
+      ) : null}
     </AppShell>
   );
 }

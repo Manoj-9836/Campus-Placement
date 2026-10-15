@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../../models/User");
+const GoogleUser = require("../../models/GoogleUser");
 const RefreshToken = require("../../models/RefreshToken");
 const env = require("../../config/env");
 const {
@@ -52,7 +53,10 @@ async function register(input) {
 
 async function login(input) {
   const user = await User.findOne({ email: input.email }).select("+passwordHash");
-  const passwordMatches = user && user.isActive ? await bcrypt.compare(input.password, user.passwordHash) : false;
+  const passwordMatches =
+    user && user.isActive && user.passwordHash
+      ? await bcrypt.compare(input.password, user.passwordHash)
+      : false;
 
   if (!passwordMatches) {
     const error = new Error("Invalid email or password");
@@ -63,6 +67,36 @@ async function login(input) {
 
   user.lastLoginAt = new Date();
   await user.save();
+  return issueTokens(user);
+}
+
+async function syncClerkUser({ clerkId, email, name, imageUrl, provider }) {
+  const UserModel = provider === "google" ? GoogleUser : User;
+
+  const user = await UserModel.findOneAndUpdate(
+    { $or: [{ clerkId }, { email }] },
+    {
+      $set: {
+        clerkId,
+        email,
+        name: name || "Student",
+        ...(imageUrl ? { imageUrl } : {}),
+        lastLoginAt: new Date(),
+      },
+      $setOnInsert: {
+        institution: "Not provided",
+        role: "student",
+        visibility: "public",
+        isActive: true,
+      },
+    },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+  );
+
+  if (!user) {
+    throw new Error("Failed to save user to database");
+  }
+
   return issueTokens(user);
 }
 
@@ -92,7 +126,12 @@ async function refresh(refreshToken) {
     throw error;
   }
 
-  const user = await User.findOne({ _id: payload.sub, isActive: true });
+  // Try to find user in both collections (Google users and regular users)
+  let user = await User.findOne({ _id: payload.sub, isActive: true });
+  if (!user) {
+    user = await GoogleUser.findOne({ _id: payload.sub, isActive: true });
+  }
+
   if (!user) {
     const error = new Error("User is not available");
     error.statusCode = 401;
@@ -113,4 +152,4 @@ async function logoutAll(userId) {
   await RefreshToken.updateMany({ userId, revokedAt: null }, { $set: { revokedAt: new Date() } });
 }
 
-module.exports = { register, login, refresh, logout, logoutAll };
+module.exports = { register, login, refresh, logout, logoutAll, syncClerkUser };

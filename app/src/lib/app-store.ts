@@ -49,12 +49,32 @@ export type AppState = {
   connected: string[];
   visibility: "public" | "private";
   profile: {
+    avatar: string;
     name: string;
     handle: string;
     location: string;
     institution: string;
     about: string;
     email: string;
+    phone: string;
+    department: string;
+    degree: string;
+    currentYear: string;
+    currentSemester: string;
+    graduationYear: string;
+    gender: string;
+    country: string;
+    cgpa: string;
+    programmingLanguages: string[];
+    technicalSkills: string[];
+    targetRoles: string[];
+    jobSeeking: string;
+    resumeUrl: string;
+    portfolioUrl: string;
+    githubUrl: string;
+    linkedinUrl: string;
+    projects: { id: string; title: string; description: string; technologies: string }[];
+    visibilityConfigured: boolean;
   };
 };
 
@@ -74,12 +94,32 @@ function createDefaultState(): AppState {
       .map((p) => p.name),
     visibility: currentUser.visibility,
     profile: {
+      avatar: "",
       name: currentUser.name,
       handle: currentUser.handle,
       location: currentUser.location,
       institution: currentUser.institution,
       about: currentUser.about,
       email: "manoj@example.com",
+      phone: "",
+      department: "Computer Science and Engineering",
+      degree: "B.Tech",
+      currentYear: "3rd Year",
+      currentSemester: "3-2",
+      graduationYear: "2027",
+      gender: "",
+      country: "India",
+      cgpa: "",
+      programmingLanguages: [],
+      technicalSkills: [],
+      targetRoles: [],
+      jobSeeking: "",
+      resumeUrl: "",
+      portfolioUrl: "",
+      githubUrl: "",
+      linkedinUrl: "",
+      projects: [],
+      visibilityConfigured: false,
     },
   };
 }
