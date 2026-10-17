@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { sheets } from "@/lib/mock-data";
-import { addCustomSheet, deleteCustomSheet, toggleFollow, useAppState } from "@/lib/app-store";
+import { addCustomSheet, deleteCustomSheet, useAppState } from "@/lib/app-store";
+import { SheetCard } from "@/components/sheets/SheetCard";
 import {
   Dialog,
   DialogContent,
@@ -88,44 +89,21 @@ function MySheetsPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="scrollbar-thin mt-3 grid max-h-[32rem] gap-4 overflow-y-auto pr-2 sm:grid-cols-2">
           {followedSheets.map((s) => (
-            <article key={s.id} className="card-surface p-5">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-primary">{s.title}</h3>
-                <button
-                  type="button"
-                  aria-label={`Unfollow ${s.title}`}
-                  onClick={() => {
-                    toggleFollow(s.id);
-                    toast.message(`Unfollowed ${s.title}`);
-                  }}
-                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {s.questions} questions · by {s.author}
-              </p>
-              <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${s.progress}%` }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">{s.progress}% complete</p>
-              <button
-                type="button"
-                onClick={() => navigate({ to: "/workspace" })}
-                className="mt-4 w-full rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
-              >
-                Continue
-              </button>
-            </article>
+            <SheetCard key={s.id} sheet={s} />
           ))}
         </div>
       )}
+
+      <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        Explore Sheets
+      </h2>
+      <div className="scrollbar-thin mt-3 grid max-h-[32rem] gap-4 overflow-y-auto pr-2 sm:grid-cols-2">
+        {sheets.map((s) => (
+          <SheetCard key={s.id} sheet={s} />
+        ))}
+      </div>
 
       <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
         Created by me

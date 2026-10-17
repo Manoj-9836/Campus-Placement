@@ -19,10 +19,22 @@ function ProfileAvatar() {
   const avatarKey = user?.id || "no-user";
 
   if (profile.avatar) {
-    return <img key={`avatar-${avatarKey}`} src={profile.avatar} alt="Profile" className="size-full object-cover" />;
+    return (
+      <img
+        key={`avatar-${avatarKey}`}
+        src={profile.avatar}
+        alt="Profile"
+        className="size-full object-cover"
+      />
+    );
   }
   return user?.imageUrl ? (
-    <img key={`avatar-${avatarKey}`} src={user.imageUrl} alt={user.fullName ?? "Profile"} className="size-full object-cover" />
+    <img
+      key={`avatar-${avatarKey}`}
+      src={user.imageUrl}
+      alt={user.fullName ?? "Profile"}
+      className="size-full object-cover"
+    />
   ) : null;
 }
 
@@ -57,9 +69,12 @@ export function AppShell({
   fullWidth?: boolean;
   wideSidebar?: boolean;
 }) {
+  const { user } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { dark, toggle } = useThemeToggle();
+  const { profile } = useAppState();
+  const email = profile.email || user?.primaryEmailAddress?.emailAddress || "Account email";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -143,7 +158,8 @@ export function AppShell({
             <Link
               to="/settings"
               aria-label="Profile settings"
-              className="size-8 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-primary-glow sm:size-9"
+              title={email}
+              className="size-8 shrink-0 overflow-hidden rounded-full bg-linear-to-br from-primary to-primary-glow sm:size-9"
             >
               {isClerkConfigured ? <ProfileAvatar /> : null}
             </Link>
@@ -151,7 +167,7 @@ export function AppShell({
         </header>
 
         <main
-          className={cn("min-w-0 flex-1 px-2.5 py-4 sm:px-5 sm:py-5 lg:px-8", fullWidth && "!p-0")}
+          className={cn("min-w-0 flex-1 px-2.5 py-4 sm:px-5 sm:py-5 lg:px-8", fullWidth && "p-0!")}
         >
           {children}
         </main>

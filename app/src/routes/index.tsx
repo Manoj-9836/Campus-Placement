@@ -109,7 +109,7 @@ function HomePage() {
         if (profile.fullName && profile.fullName.trim()) {
           // Use first name from full name
           const firstName = profile.fullName.split(" ")[0];
-          setDisplayName(firstName);
+          setDisplayName(firstName ?? "Student");
         } else {
           setDisplayName("Student");
         }
@@ -134,8 +134,8 @@ function HomePage() {
         </p>
 
         <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
-          Welcome back, {displayName}. Your{" "}
-          <span className="gradient-text">coding journey</span> in one place.
+          Welcome back, {displayName}. Your <span className="gradient-text">coding journey</span> in
+          one place.
         </h1>
 
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">

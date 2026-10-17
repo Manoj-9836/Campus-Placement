@@ -18,6 +18,7 @@ const saveProfileSchema = z.object({
   twelfth: z.string().trim().optional(),
   backlogs: z.string().trim().optional(),
   gap: z.string().trim().optional(),
+  gender: z.string().trim().optional(),
   handle: z.string().trim().optional(),
   preferredLanguage: z.string().trim().optional(),
   dsaProficiency: z.string().trim().optional(),

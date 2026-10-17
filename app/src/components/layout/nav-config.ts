@@ -36,7 +36,7 @@ export const navSections: NavSection[] = [
     items: [
       { label: "Company Wise Kit", to: "/company-wise-kit", icon: ClipboardList },
       { label: "My Workspace", to: "/workspace", icon: LayoutList },
-      { label: "Explore Sheets", to: "/explore-sheets", icon: Network },
+      { label: "Roadmaps", to: "/explore-sheets", icon: Network },
       { label: "My Sheets", to: "/my-sheets", icon: FileText },
       { label: "Notes", to: "/notes", icon: StickyNote },
     ],

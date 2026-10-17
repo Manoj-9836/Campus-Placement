@@ -22,6 +22,11 @@ async function getProfile(clerkId, email) {
       country: "",
       about: "",
       cgpa: "",
+      tenth: "",
+      twelfth: "",
+      backlogs: "",
+      gap: "",
+      gender: "",
       programmingLanguages: [],
       technicalSkills: [],
       targetRoles: [],
@@ -32,7 +37,7 @@ async function getProfile(clerkId, email) {
       linkedinUrl: "",
       projects: [],
       visibility: "public",
-      visibilityConfigured: false,
+      visibilityConfigured: true,
     };
   }
 

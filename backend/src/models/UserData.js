@@ -77,6 +77,26 @@ const userDataSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    tenth: {
+      type: String,
+      trim: true,
+    },
+    twelfth: {
+      type: String,
+      trim: true,
+    },
+    backlogs: {
+      type: String,
+      trim: true,
+    },
+    gap: {
+      type: String,
+      trim: true,
+    },
+    gender: {
+      type: String,
+      trim: true,
+    },
     programmingLanguages: [String],
     technicalSkills: [String],
     targetRoles: [String],
@@ -140,7 +160,7 @@ const userDataSchema = new mongoose.Schema(
     },
     visibilityConfigured: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   { timestamps: true, versionKey: false }

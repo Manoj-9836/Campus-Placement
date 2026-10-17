@@ -124,12 +124,42 @@ function SettingsPage() {
       if (currentUserClerkId && currentUserClerkId !== user.id) {
         // User switched, clear all data
         const emptyProfile: AppState["profile"] = {
-          avatar: "", name: "", handle: "", location: "", institution: "", about: "", email: "", phone: "",
-          department: "", degree: "", currentYear: "", currentSemester: "", graduationYear: "", gender: "",
-          country: "", cgpa: "", tenth: "", twelfth: "", backlogs: "", gap: "", preferredLanguage: "",
-          dsaProficiency: "", preferredDomains: "", preferredLocations: "", workMode: "", rollNumber: "",
-          programmingLanguages: [], technicalSkills: [], targetRoles: [], jobSeeking: "", resumeUrl: "",
-          portfolioUrl: "", githubUrl: "", linkedinUrl: "", projects: [], visibilityConfigured: false,
+          avatar: "",
+          name: "",
+          handle: "",
+          location: "",
+          institution: "",
+          about: "",
+          email: "",
+          phone: "",
+          department: "",
+          degree: "",
+          currentYear: "",
+          currentSemester: "",
+          graduationYear: "",
+          gender: "",
+          country: "",
+          cgpa: "",
+          tenth: "",
+          twelfth: "",
+          backlogs: "",
+          gap: "",
+          preferredLanguage: "",
+          dsaProficiency: "",
+          preferredDomains: "",
+          preferredLocations: "",
+          workMode: "",
+          rollNumber: "",
+          programmingLanguages: [],
+          technicalSkills: [],
+          targetRoles: [],
+          jobSeeking: "",
+          resumeUrl: "",
+          portfolioUrl: "",
+          githubUrl: "",
+          linkedinUrl: "",
+          projects: [],
+          visibilityConfigured: true,
         };
         setDraft(emptyProfile);
         setDraftVisibility("public");
@@ -159,18 +189,18 @@ function SettingsPage() {
           country: remoteProfile.country || "",
           about: remoteProfile.about || "",
           cgpa: remoteProfile.cgpa || "",
-          tenth: "",
-          twelfth: "",
-          backlogs: "",
-          gap: "",
+          tenth: remoteProfile.tenth || "",
+          twelfth: remoteProfile.twelfth || "",
+          backlogs: remoteProfile.backlogs || "",
+          gap: remoteProfile.gap || "",
           preferredLanguage: remoteProfile.preferredLanguage || "",
           dsaProficiency: remoteProfile.dsaProficiency || "",
           preferredDomains: remoteProfile.preferredDomains || "",
           preferredLocations: remoteProfile.preferredLocations || "",
           workMode: remoteProfile.workMode || "",
           handle: remoteProfile.handle || "",
-          email: "",
-          gender: "",
+          email: remoteProfile.email || user.primaryEmailAddress?.emailAddress || "",
+          gender: remoteProfile.gender || "",
           programmingLanguages: remoteProfile.programmingLanguages || [],
           technicalSkills: remoteProfile.technicalSkills || [],
           targetRoles: remoteProfile.targetRoles || [],
@@ -180,11 +210,13 @@ function SettingsPage() {
           githubUrl: remoteProfile.githubUrl || "",
           linkedinUrl: remoteProfile.linkedinUrl || "",
           projects: remoteProfile.projects || [],
-          visibilityConfigured: remoteProfile.visibilityConfigured || false,
+          visibilityConfigured: remoteProfile.visibilityConfigured !== false,
         };
 
         setDraft(merged);
+        saveProfile(merged);
         setDraftVisibility(remoteProfile.visibility || "public");
+        setVisibility(remoteProfile.visibility || "public");
       } catch (error) {
         // Silently fail for new users without profile yet
         console.log("Profile not found or loading error");
@@ -201,19 +233,49 @@ function SettingsPage() {
   useEffect(() => {
     if (user === null && currentUserClerkId !== null) {
       const emptyProfile: AppState["profile"] = {
-        avatar: "", name: "", handle: "", location: "", institution: "", about: "", email: "", phone: "",
-        department: "", degree: "", currentYear: "", currentSemester: "", graduationYear: "", gender: "",
-        country: "", cgpa: "", tenth: "", twelfth: "", backlogs: "", gap: "", preferredLanguage: "",
-        dsaProficiency: "", preferredDomains: "", preferredLocations: "", workMode: "", rollNumber: "",
-        programmingLanguages: [], technicalSkills: [], targetRoles: [], jobSeeking: "", resumeUrl: "",
-        portfolioUrl: "", githubUrl: "", linkedinUrl: "", projects: [], visibilityConfigured: false,
+        avatar: "",
+        name: "",
+        handle: "",
+        location: "",
+        institution: "",
+        about: "",
+        email: "",
+        phone: "",
+        department: "",
+        degree: "",
+        currentYear: "",
+        currentSemester: "",
+        graduationYear: "",
+        gender: "",
+        country: "",
+        cgpa: "",
+        tenth: "",
+        twelfth: "",
+        backlogs: "",
+        gap: "",
+        preferredLanguage: "",
+        dsaProficiency: "",
+        preferredDomains: "",
+        preferredLocations: "",
+        workMode: "",
+        rollNumber: "",
+        programmingLanguages: [],
+        technicalSkills: [],
+        targetRoles: [],
+        jobSeeking: "",
+        resumeUrl: "",
+        portfolioUrl: "",
+        githubUrl: "",
+        linkedinUrl: "",
+        projects: [],
+        visibilityConfigured: true,
       };
       setDraft(emptyProfile);
       setDraftVisibility("public");
       setActive("basic");
       setCurrentUserClerkId(null);
     }
-  }, [user]);
+  }, [currentUserClerkId, user]);
 
   const update = <K extends keyof AppState["profile"]>(key: K, value: AppState["profile"][K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -236,8 +298,8 @@ function SettingsPage() {
         location: draft.location,
         institution: draft.institution,
         department: draft.department,
-        degree: draft.degree as any,
-        currentYear: draft.currentYear as any,
+        degree: draft.degree,
+        currentYear: draft.currentYear,
         currentSemester: draft.currentSemester,
         graduationYear: draft.graduationYear,
         country: draft.country,
@@ -247,6 +309,7 @@ function SettingsPage() {
         twelfth: draft.twelfth,
         backlogs: draft.backlogs,
         gap: draft.gap,
+        gender: draft.gender,
         preferredLanguage: draft.preferredLanguage,
         dsaProficiency: draft.dsaProficiency,
         preferredDomains: draft.preferredDomains,
@@ -256,14 +319,15 @@ function SettingsPage() {
         programmingLanguages: draft.programmingLanguages,
         technicalSkills: draft.technicalSkills,
         targetRoles: draft.targetRoles,
-        jobSeeking: draft.jobSeeking as any,
+        jobSeeking: draft.jobSeeking,
         resumeUrl: draft.resumeUrl,
         portfolioUrl: draft.portfolioUrl,
         githubUrl: draft.githubUrl,
         linkedinUrl: draft.linkedinUrl,
         projects: draft.projects,
         visibility: draftVisibility,
-        visibilityConfigured: draftVisibility !== "public" || visibility !== "public" ? true : false,
+        visibilityConfigured:
+          draftVisibility !== "public" || visibility !== "public" ? true : false,
       };
 
       await profileApi.saveProfile(profileData);
@@ -296,7 +360,7 @@ function SettingsPage() {
   if (loading) {
     return (
       <AppShell>
-        <div className="mx-auto max-w-[1440px] flex items-center justify-center min-h-[500px]">
+        <div className="mx-auto max-w-360 flex items-center justify-center min-h-125">
           <div className="text-center">
             <Loader2 className="mx-auto mb-4 size-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Loading your profile...</p>
@@ -308,7 +372,7 @@ function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-[1440px]">
+      <div className="mx-auto max-w-360">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Edit Profile</h1>
@@ -323,7 +387,7 @@ function SettingsPage() {
         </div>
 
         <div className="mt-7 overflow-x-auto pb-2">
-          <div className="flex min-w-[720px] items-start">
+          <div className="flex min-w-180 items-start">
             {sections.map((section, index) => {
               const status = completion.sections[section.id];
               const done = status === "completed";
@@ -333,7 +397,7 @@ function SettingsPage() {
                   key={section.id}
                   type="button"
                   onClick={() => setActive(section.id)}
-                  className="group flex min-w-[120px] flex-1 items-start text-center"
+                  className="group flex min-w-30 flex-1 items-start text-center"
                   aria-current={current ? "step" : undefined}
                 >
                   <span className="flex flex-1 flex-col items-center">
@@ -491,9 +555,7 @@ function SettingsPage() {
                   </button>
                 </div>
               ) : (
-                <div className="text-xs text-muted-foreground">
-                  Continue to next section →
-                </div>
+                <div className="text-xs text-muted-foreground">Continue to next section →</div>
               )}
             </div>
           </section>
@@ -505,7 +567,7 @@ function SettingsPage() {
 
 function CompletionCard({ percentage, completed }: { percentage: number; completed: number }) {
   return (
-    <div className="flex min-w-[270px] items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+    <div className="flex min-w-67.5 items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
       <div
         className="relative grid size-14 place-items-center rounded-full"
         style={{
@@ -638,15 +700,19 @@ function BasicForm({ draft, update }: FormProps) {
           onChange={(e) => update("handle", e.target.value)}
         />
       </Field>
-      <Field label="Email address" id="email">
-        <input
-          id="email"
-          type="email"
-          placeholder="you@example.com"
-          className={inputClass}
-          value={draft.email || ""}
-          onChange={(e) => update("email", e.target.value)}
-        />
+      <Field label="Gender" id="gender" optional>
+        <select
+          id="gender"
+          className={selectClass}
+          value={draft.gender || ""}
+          onChange={(e) => update("gender", e.target.value)}
+        >
+          <option value="">Prefer not to say</option>
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+          <option value="Non-binary">Non-binary</option>
+          <option value="Other">Other</option>
+        </select>
       </Field>
       <Field label="Phone number" id="phone" optional>
         <input

@@ -43,7 +43,7 @@ const SECTION_IDS: ProfileSectionId[] = [
   "visibility",
 ];
 
-const hasText = (value: string | undefined) => value && value.trim().length > 0;
+const hasText = (value: string | undefined) => Boolean(value?.trim());
 
 export function getProfileCompletion(data: ProfileCompletionData): ProfileCompletion {
   const validBasic = [
@@ -58,10 +58,12 @@ export function getProfileCompletion(data: ProfileCompletionData): ProfileComple
 
   const validAcademic = hasText(data.cgpa) && Number(data.cgpa) >= 0 && Number(data.cgpa) <= 10;
 
-  // Skills: must have at least 1 programming language and 3 technical skills
+  // Skills: require every visible skills field to be completed.
   const validSkills =
     data.programmingLanguages.filter(hasText).length > 0 &&
-    data.technicalSkills.filter(hasText).length >= 3;
+    data.technicalSkills.filter(hasText).length > 0 &&
+    hasText(data.preferredLanguage) &&
+    hasText(data.dsaProficiency);
 
   // Preferences: must have target roles, job seeking, and all preference fields filled
   const validPreferences =
@@ -76,8 +78,8 @@ export function getProfileCompletion(data: ProfileCompletionData): ProfileComple
   const validProjects =
     data.projects.some((project) => hasText(project.title)) || hasText(data.resumeUrl);
 
-  // Visibility: only complete if user explicitly configured it
-  const validVisibility = data.visibilityConfigured === true;
+  // Public visibility is the default; private visibility can be selected later.
+  const validVisibility = true;
 
   const validBySection: Record<ProfileSectionId, boolean> = {
     basic: validBasic,

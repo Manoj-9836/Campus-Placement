@@ -36,7 +36,7 @@ export const Route = createFileRoute("/notes")({
 });
 
 const tabs = ["Question Notes", "General Notes"] as const;
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api/v1";
+const API_URL = import.meta.env["VITE_API_URL"] ?? "http://localhost:5000/api/v1";
 const field =
   "mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary";
 
@@ -221,9 +221,9 @@ function NotesPage() {
           </div>
         </div>
 
-        <div className="grid min-h-[28rem] md:grid-cols-[35%_65%]">
+        <div className="grid min-h-112 md:grid-cols-[35%_65%]">
           <section className="min-w-0 border-b border-border md:border-b-0 md:border-r">
-            <div className="max-h-[32rem] overflow-y-auto p-2 scrollbar-thin sm:p-3">
+            <div className="max-h-128 overflow-y-auto p-2 scrollbar-thin sm:p-3">
               {loading ? (
                 <div className="px-3 py-12 text-center text-sm text-muted-foreground">
                   Loading notes...
@@ -276,10 +276,10 @@ function NotesPage() {
 
           <section className="min-w-0">
             {active ? (
-              <div className="flex max-h-[32rem] min-h-[28rem] flex-col overflow-y-auto p-5 scrollbar-thin sm:p-7">
+              <div className="flex max-h-128 min-h-112 flex-col overflow-y-auto p-5 scrollbar-thin sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h2 className="break-words text-xl font-semibold tracking-tight sm:text-2xl">
+                    <h2 className="wrap-break-word text-xl font-semibold tracking-tight sm:text-2xl">
                       {active.title}
                     </h2>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -301,12 +301,12 @@ function NotesPage() {
                   </button>
                 </div>
                 <div className="my-5 h-px shrink-0 bg-border" />
-                <p className="whitespace-pre-wrap break-words text-sm leading-8 text-foreground/90">
+                <p className="whitespace-pre-wrap wrap-break-word text-sm leading-8 text-foreground/90">
                   {active.body}
                 </p>
               </div>
             ) : (
-              <div className="grid min-h-[28rem] place-items-center p-8 text-center">
+              <div className="grid min-h-112 place-items-center p-8 text-center">
                 <div>
                   <FileText className="mx-auto size-10 text-muted-foreground/40" />
                   <p className="mt-3 text-sm font-medium">Select a note to view it</p>

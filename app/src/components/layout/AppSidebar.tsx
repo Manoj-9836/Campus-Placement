@@ -9,7 +9,7 @@ function ClerkLogoutButton({
   onNavigate,
   collapsed = false,
 }: {
-  onNavigate?: () => void;
+  onNavigate?: (() => void) | undefined;
   collapsed?: boolean;
 }) {
   const { signOut } = useClerk();
@@ -35,7 +35,7 @@ export function AppSidebar({
   onNavigate,
   collapsed = false,
 }: {
-  onNavigate?: () => void;
+  onNavigate?: (() => void) | undefined;
   collapsed?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
